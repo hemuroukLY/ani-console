@@ -29,6 +29,7 @@ export const gpuInstanceDetailTabKeys = [
   "releases",
   "configuration",
   "storage",
+  "gpu-metrics",
   "network",
   "monitoring",
   "logs",
