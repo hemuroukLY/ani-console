@@ -13,6 +13,7 @@ import {
 
 const DATE_TIME_DISPLAY_PATTERN = "yyyy/M/d HH:mm:ss";
 const TIME_DISPLAY_PATTERN = "HH:mm";
+const SHORT_DATE_TIME_DISPLAY_PATTERN = "M/d HH:mm";
 
 export function parseDateTime(value: string): Date {
   return parseISO(value);
@@ -36,6 +37,12 @@ export function formatTime(value?: string | null): string {
   if (!value) return "-";
   const date = parseDateTime(value);
   return isValid(date) ? format(date, TIME_DISPLAY_PATTERN) : value;
+}
+
+export function formatTrendTime(value: string, includeDate: boolean): string {
+  const date = parseDateTime(value);
+  if (!isValid(date)) return value;
+  return format(date, includeDate ? SHORT_DATE_TIME_DISPLAY_PATTERN : TIME_DISPLAY_PATTERN);
 }
 
 export function compareDateTimesDescending(left: string, right: string): number {

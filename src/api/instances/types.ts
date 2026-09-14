@@ -1,6 +1,8 @@
 import type { AsyncTask } from "@/api/tasks";
 import type { CoreDevProfileInfo, CursorPageParams } from "@/api/types";
 
+export type { ObservabilityRangeQueryResponse } from "@/api/observability";
+
 export type InstanceKind =
   | "vm"
   | "container"
@@ -359,15 +361,6 @@ export interface InstanceSecurityEvent {
   severity: "info" | "warning" | "critical";
   description?: string | null;
   occurred_at: string;
-}
-export interface ObservabilityRangeQueryResponse {
-  query: string;
-  result_type: "vector" | "matrix" | "scalar" | "string";
-  results: Array<{
-    metric: Record<string, string>;
-    values: Array<{ timestamp: string; value: number }>;
-  }>;
-  dev_profile: CoreDevProfileInfo;
 }
 export interface InstanceExecSession {
   id: string;

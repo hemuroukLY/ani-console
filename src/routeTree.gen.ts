@@ -54,7 +54,6 @@ import { Route as AuthenticatedFilesystemsFilesystemIdRouteImport } from './rout
 import { Route as AuthenticatedContainerInstancesInstanceIdRouteImport } from './routes/_authenticated/container-instances/$instanceId'
 import { Route as AuthenticatedObjectsBucketIdIndexRouteImport } from './routes/_authenticated/objects/$bucketId/index'
 import { Route as AuthenticatedObjectsBucketIdObjectIdRouteImport } from './routes/_authenticated/objects/$bucketId/$objectId'
-import { Route as AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRouteImport } from './routes/_authenticated/vm-instances/$instanceId/volumes/$volumeId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -316,12 +315,6 @@ const AuthenticatedObjectsBucketIdObjectIdRoute =
     path: '/$objectId',
     getParentRoute: () => AuthenticatedObjectsBucketIdRoute,
   } as any)
-const AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute =
-  AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRouteImport.update({
-    id: '/volumes/$volumeId',
-    path: '/volumes/$volumeId',
-    getParentRoute: () => AuthenticatedVmInstancesInstanceIdRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRouteWithChildren
@@ -342,7 +335,7 @@ export interface FileRoutesByFullPath {
   '/security-groups/$securityGroupId': typeof AuthenticatedSecurityGroupsSecurityGroupIdRoute
   '/subnets/$subnetId': typeof AuthenticatedSubnetsSubnetIdRoute
   '/vector-stores/$vectorStoreId': typeof AuthenticatedVectorStoresVectorStoreIdRoute
-  '/vm-instances/$instanceId': typeof AuthenticatedVmInstancesInstanceIdRouteWithChildren
+  '/vm-instances/$instanceId': typeof AuthenticatedVmInstancesInstanceIdRoute
   '/volumes/$volumeId': typeof AuthenticatedVolumesVolumeIdRoute
   '/vpcs/$vpcId': typeof AuthenticatedVpcsVpcIdRoute
   '/container-instances': typeof AuthenticatedContainerInstancesIndexRoute
@@ -368,7 +361,6 @@ export interface FileRoutesByFullPath {
   '/vpcs': typeof AuthenticatedVpcsIndexRoute
   '/objects/$bucketId/$objectId': typeof AuthenticatedObjectsBucketIdObjectIdRoute
   '/objects/$bucketId/': typeof AuthenticatedObjectsBucketIdIndexRoute
-  '/vm-instances/$instanceId/volumes/$volumeId': typeof AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute
 }
 export interface FileRoutesByTo {
   '/login/callback': typeof LoginCallbackRoute
@@ -387,7 +379,7 @@ export interface FileRoutesByTo {
   '/security-groups/$securityGroupId': typeof AuthenticatedSecurityGroupsSecurityGroupIdRoute
   '/subnets/$subnetId': typeof AuthenticatedSubnetsSubnetIdRoute
   '/vector-stores/$vectorStoreId': typeof AuthenticatedVectorStoresVectorStoreIdRoute
-  '/vm-instances/$instanceId': typeof AuthenticatedVmInstancesInstanceIdRouteWithChildren
+  '/vm-instances/$instanceId': typeof AuthenticatedVmInstancesInstanceIdRoute
   '/volumes/$volumeId': typeof AuthenticatedVolumesVolumeIdRoute
   '/vpcs/$vpcId': typeof AuthenticatedVpcsVpcIdRoute
   '/container-instances': typeof AuthenticatedContainerInstancesIndexRoute
@@ -413,7 +405,6 @@ export interface FileRoutesByTo {
   '/vpcs': typeof AuthenticatedVpcsIndexRoute
   '/objects/$bucketId/$objectId': typeof AuthenticatedObjectsBucketIdObjectIdRoute
   '/objects/$bucketId': typeof AuthenticatedObjectsBucketIdIndexRoute
-  '/vm-instances/$instanceId/volumes/$volumeId': typeof AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -436,7 +427,7 @@ export interface FileRoutesById {
   '/_authenticated/security-groups/$securityGroupId': typeof AuthenticatedSecurityGroupsSecurityGroupIdRoute
   '/_authenticated/subnets/$subnetId': typeof AuthenticatedSubnetsSubnetIdRoute
   '/_authenticated/vector-stores/$vectorStoreId': typeof AuthenticatedVectorStoresVectorStoreIdRoute
-  '/_authenticated/vm-instances/$instanceId': typeof AuthenticatedVmInstancesInstanceIdRouteWithChildren
+  '/_authenticated/vm-instances/$instanceId': typeof AuthenticatedVmInstancesInstanceIdRoute
   '/_authenticated/volumes/$volumeId': typeof AuthenticatedVolumesVolumeIdRoute
   '/_authenticated/vpcs/$vpcId': typeof AuthenticatedVpcsVpcIdRoute
   '/_authenticated/container-instances/': typeof AuthenticatedContainerInstancesIndexRoute
@@ -462,7 +453,6 @@ export interface FileRoutesById {
   '/_authenticated/vpcs/': typeof AuthenticatedVpcsIndexRoute
   '/_authenticated/objects/$bucketId/$objectId': typeof AuthenticatedObjectsBucketIdObjectIdRoute
   '/_authenticated/objects/$bucketId/': typeof AuthenticatedObjectsBucketIdIndexRoute
-  '/_authenticated/vm-instances/$instanceId/volumes/$volumeId': typeof AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -511,7 +501,6 @@ export interface FileRouteTypes {
     | '/vpcs'
     | '/objects/$bucketId/$objectId'
     | '/objects/$bucketId/'
-    | '/vm-instances/$instanceId/volumes/$volumeId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login/callback'
@@ -556,7 +545,6 @@ export interface FileRouteTypes {
     | '/vpcs'
     | '/objects/$bucketId/$objectId'
     | '/objects/$bucketId'
-    | '/vm-instances/$instanceId/volumes/$volumeId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -604,7 +592,6 @@ export interface FileRouteTypes {
     | '/_authenticated/vpcs/'
     | '/_authenticated/objects/$bucketId/$objectId'
     | '/_authenticated/objects/$bucketId/'
-    | '/_authenticated/vm-instances/$instanceId/volumes/$volumeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -929,13 +916,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectsBucketIdObjectIdRouteImport
       parentRoute: typeof AuthenticatedObjectsBucketIdRoute
     }
-    '/_authenticated/vm-instances/$instanceId/volumes/$volumeId': {
-      id: '/_authenticated/vm-instances/$instanceId/volumes/$volumeId'
-      path: '/volumes/$volumeId'
-      fullPath: '/vm-instances/$instanceId/volumes/$volumeId'
-      preLoaderRoute: typeof AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRouteImport
-      parentRoute: typeof AuthenticatedVmInstancesInstanceIdRoute
-    }
   }
 }
 
@@ -957,21 +937,6 @@ const AuthenticatedObjectsBucketIdRouteWithChildren =
     AuthenticatedObjectsBucketIdRouteChildren,
   )
 
-interface AuthenticatedVmInstancesInstanceIdRouteChildren {
-  AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute: typeof AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute
-}
-
-const AuthenticatedVmInstancesInstanceIdRouteChildren: AuthenticatedVmInstancesInstanceIdRouteChildren =
-  {
-    AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute:
-      AuthenticatedVmInstancesInstanceIdVolumesVolumeIdRoute,
-  }
-
-const AuthenticatedVmInstancesInstanceIdRouteWithChildren =
-  AuthenticatedVmInstancesInstanceIdRoute._addFileChildren(
-    AuthenticatedVmInstancesInstanceIdRouteChildren,
-  )
-
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedContainerInstancesInstanceIdRoute: typeof AuthenticatedContainerInstancesInstanceIdRoute
@@ -988,7 +953,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSecurityGroupsSecurityGroupIdRoute: typeof AuthenticatedSecurityGroupsSecurityGroupIdRoute
   AuthenticatedSubnetsSubnetIdRoute: typeof AuthenticatedSubnetsSubnetIdRoute
   AuthenticatedVectorStoresVectorStoreIdRoute: typeof AuthenticatedVectorStoresVectorStoreIdRoute
-  AuthenticatedVmInstancesInstanceIdRoute: typeof AuthenticatedVmInstancesInstanceIdRouteWithChildren
+  AuthenticatedVmInstancesInstanceIdRoute: typeof AuthenticatedVmInstancesInstanceIdRoute
   AuthenticatedVolumesVolumeIdRoute: typeof AuthenticatedVolumesVolumeIdRoute
   AuthenticatedVpcsVpcIdRoute: typeof AuthenticatedVpcsVpcIdRoute
   AuthenticatedContainerInstancesIndexRoute: typeof AuthenticatedContainerInstancesIndexRoute
@@ -1040,7 +1005,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedVectorStoresVectorStoreIdRoute:
     AuthenticatedVectorStoresVectorStoreIdRoute,
   AuthenticatedVmInstancesInstanceIdRoute:
-    AuthenticatedVmInstancesInstanceIdRouteWithChildren,
+    AuthenticatedVmInstancesInstanceIdRoute,
   AuthenticatedVolumesVolumeIdRoute: AuthenticatedVolumesVolumeIdRoute,
   AuthenticatedVpcsVpcIdRoute: AuthenticatedVpcsVpcIdRoute,
   AuthenticatedContainerInstancesIndexRoute:

@@ -1,7 +1,10 @@
+import { queryResourceTrend } from "@/api/observability";
+import { formatTrendTime, getPreviousHoursDateTimeRange, isValidDateTime } from "@/lib/date";
 import type {
   HomeCpuItem,
   HomeOverviewData,
   HomeOverviewDataSource,
+  HomeResourceTrendMetric,
   HomeTimeRange,
   HomeTrendData,
   HomeTrendHeadline,
@@ -10,6 +13,18 @@ import type {
 
 const BLUE = "#0079D3";
 const GREEN = "#67C23A";
+
+const resourceTrendMeta: Record<HomeResourceTrendMetric, { name: string }> = {
+  gpu: { name: "GPU 利用率" },
+  cpu: { name: "CPU 利用率" },
+  memory: { name: "内存利用率" },
+};
+
+const rangeQueryConfig: Record<HomeTimeRange, { hours: number; step: string }> = {
+  "1d": { hours: 24, step: "5m" },
+  "7d": { hours: 7 * 24, step: "30m" },
+  "30d": { hours: 30 * 24, step: "2h" },
+};
 
 function snapshot(
   labels: string[],
@@ -26,9 +41,9 @@ const labelsByRange: Record<HomeTimeRange, string[]> = {
 };
 
 const primaryTrend: HomeTrendData = {
-  title: "资源趋势",
-  yMax: 4,
-  yInterval: 1,
+  title: "GPU资源趋势",
+  yMax: 100,
+  yInterval: 20,
   ranges: {
     "1d": snapshot(
       labelsByRange["1d"],
@@ -49,9 +64,9 @@ const primaryTrend: HomeTrendData = {
 };
 
 const comparisonTrend: HomeTrendData = {
-  title: "资源趋势",
-  yMax: 4,
-  yInterval: 1,
+  title: "内存资源趋势",
+  yMax: 100,
+  yInterval: 20,
   ranges: {
     "1d": snapshot(
       labelsByRange["1d"],
@@ -90,9 +105,9 @@ const comparisonTrend: HomeTrendData = {
 };
 
 const percentageTrend: HomeTrendData = {
-  title: "资源趋势",
-  yMax: 4,
-  yInterval: 1,
+  title: "CPU资源趋势",
+  yMax: 100,
+  yInterval: 20,
   ranges: {
     "1d": snapshot(
       labelsByRange["1d"],
@@ -326,6 +341,40 @@ const mockOverview: HomeOverviewData = {
 
 const waitForMockResponse = () => new Promise((resolve) => globalThis.setTimeout(resolve, 120));
 
+async function getResourceTrend(
+  metric: HomeResourceTrendMetric,
+  range: HomeTimeRange,
+): Promise<HomeTrendSnapshot> {
+  const config = rangeQueryConfig[range];
+  const { start, end } = getPreviousHoursDateTimeRange(config.hours);
+  const response = await queryResourceTrend({ metric, start, end, step: config.step });
+  const points = response.results
+    .flatMap((series) => series.values)
+    .filter((point) => Number.isFinite(point.value) && isValidDateTime(point.timestamp));
+  const latest = points.at(-1);
+
+  return snapshot(
+    points.map((point) => formatTrendTime(point.timestamp, range !== "1d")),
+    latest
+      ? [
+          {
+            label: "当前",
+            value: Number(latest.value.toFixed(2)),
+            unit: "%",
+            color: BLUE,
+          },
+        ]
+      : [],
+    [
+      {
+        name: resourceTrendMeta[metric].name,
+        color: BLUE,
+        values: points.map((point) => point.value),
+      },
+    ],
+  );
+}
+
 export function createMockHomeOverviewDataSource(
   seed: HomeOverviewData = mockOverview,
 ): HomeOverviewDataSource {
@@ -335,10 +384,23 @@ export function createMockHomeOverviewDataSource(
       await waitForMockResponse();
       return structuredClone(data);
     },
+    async getResourceTrend(metric, range) {
+      await waitForMockResponse();
+      const trends: Record<HomeResourceTrendMetric, HomeTrendData> = {
+        gpu: data.primaryTrend,
+        cpu: data.percentageTrend,
+        memory: data.comparisonTrend,
+      };
+      return structuredClone(trends[metric].ranges[range]);
+    },
   };
 }
 
-// Replace this binding with an API-backed adapter when the overview endpoints are ready.
-export const homeOverviewDataSource: HomeOverviewDataSource = createMockHomeOverviewDataSource();
+const mockHomeOverviewDataSource = createMockHomeOverviewDataSource();
+
+export const homeOverviewDataSource: HomeOverviewDataSource = {
+  getOverview: mockHomeOverviewDataSource.getOverview,
+  getResourceTrend,
+};
 
 export const homeOverviewMockData = structuredClone(mockOverview);

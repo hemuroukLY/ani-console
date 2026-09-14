@@ -1,4 +1,5 @@
 export type HomeTimeRange = "1d" | "7d" | "30d";
+export type HomeResourceTrendMetric = "gpu" | "cpu" | "memory";
 export type HomeTaskStatus = "done" | "failed" | "current";
 export type HomeTaskFilter = "done" | "current";
 export type HomeMonitorSource = "external" | "internal";
@@ -96,4 +97,8 @@ export type HomeOverviewData = {
 
 export interface HomeOverviewDataSource {
   getOverview(): Promise<HomeOverviewData>;
+  getResourceTrend(
+    metric: HomeResourceTrendMetric,
+    range: HomeTimeRange,
+  ): Promise<HomeTrendSnapshot>;
 }

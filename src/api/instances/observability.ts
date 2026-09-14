@@ -1,11 +1,7 @@
 import { coreRequest } from "@/api/request";
+export { queryObservabilityRange } from "@/api/observability";
 import { instancePath } from "./records";
-import type {
-  InstanceEvent,
-  InstanceMetrics,
-  InstanceSecurityEvent,
-  ObservabilityRangeQueryResponse,
-} from "./types";
+import type { InstanceEvent, InstanceMetrics, InstanceSecurityEvent } from "./types";
 type ListResponse<T> = { items: T[]; total: number; next_cursor?: string | null };
 export function getInstanceMetrics(instanceId: string): Promise<InstanceMetrics> {
   return coreRequest<InstanceMetrics>(`${instancePath(instanceId)}/metrics`, { method: "GET" });
@@ -23,17 +19,6 @@ export function listInstanceSecurityEvents(
     `${instancePath(instanceId)}/security-events`,
     { method: "GET", params },
   );
-}
-export function queryObservabilityRange(params: {
-  query: string;
-  start: string;
-  end: string;
-  step: string;
-}): Promise<ObservabilityRangeQueryResponse> {
-  return coreRequest<ObservabilityRangeQueryResponse>("/observability/query_range", {
-    method: "GET",
-    params,
-  });
 }
 export function streamInstanceLogs(
   instanceId: string,

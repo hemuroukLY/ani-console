@@ -2,7 +2,6 @@ import { Empty, Spin } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
 import { SummaryOverview } from "./SummaryOverview";
 import { TasksPanel } from "./TasksPanel";
-import { TopCpuPanel } from "./TopCpuPanel";
 import { TrendCard } from "./TrendCard";
 import { WelcomePanel } from "./WelcomePanel";
 import { homeOverviewDataSource } from "./data-source";
@@ -54,14 +53,18 @@ export function OverviewPage({
       </div>
 
       <div className={styles.twoColumnRow} data-testid="home-middle-row">
-        <TrendCard data={data.primaryTrend} testId="primary" />
-        <TrendCard data={data.percentageTrend} testId="percentage" />
+        <TrendCard data={data.primaryTrend} dataSource={dataSource} metric="gpu" testId="gpu" />
+        <TrendCard data={data.percentageTrend} dataSource={dataSource} metric="cpu" testId="cpu" />
       </div>
 
       <div className={styles.bottomGrid} data-testid="home-bottom-grid">
-        <TrendCard data={data.comparisonTrend} testId="comparison" />
+        <TrendCard
+          data={data.comparisonTrend}
+          dataSource={dataSource}
+          metric="memory"
+          testId="memory"
+        />
         <TasksPanel items={data.tasks} />
-        <TopCpuPanel data={data.cpu} />
       </div>
     </main>
   );

@@ -23,6 +23,8 @@
 
 | 日期 | 摘要 |
 |------|------|
+| 2026-09-11 | 按当前 Axios API 架构重做概览页资源趋势：保留既有页面结构，将可观测性契约收敛到独立 API 模块，GPU、CPU、内存三张趋势卡分别调用 Core `GET /observability/resource_trend`，支持 1 天/7 天/30 天区间、独立加载与错误重试、真实空数据空态，并将 `real_provider=false` 作为数据服务降级处理；实例详情原 `query_range` 导出保持兼容。变更代码 Oxlint、全仓 oxfmt、TypeScript 与差异格式检查通过；GitNexus 当前工作区检测为 MEDIUM，命中概览错误处理及日期文件相邻差异共 3 条流程，与 `master` 的累计比较为 CRITICAL。 |
+| 2026-09-11 | 移除无当前页面入口、仅使用前端样例数据的云主机挂载云盘二级详情页及其嵌套路由，清理专用遗留数据源、类型和样式；块存储列表可进入的真实云盘详情 `/volumes/:volumeId` 保持不变，并同步更新生成路由树。生成路由文件 Oxlint、全仓 oxfmt、TypeScript、路由残留与差异格式检查通过；GitNexus 变更检测为 LOW，未影响执行流程。 |
 | 2026-09-11 | 对齐 `产品原型-9.11` 并完善知识库与 GPU 实例体验：已确认原型 GitNexus 索引可访问；知识库详情“操作历史”接入 Services 审计日志，支持游标加载、刷新、操作结果及变更快照，创建分块默认值对齐为 1024，`POST /knowledge-bases` 仍仅接收 Embedding 模型；全局文本链接统一交互反馈；GPU 容器详情将 `gpu-metrics` 纳入路由允许列表，修复“GPU 指标”页签点击回退。当前浏览器环境无 GPU 容器实例，页签内容切换待在有数据环境手动确认。 |
 | 2026-09-11 | 新增基于 `date-fns` 的公共时间适配层，统一 ISO 时间解析与校验、日期时间展示、模型版本排序、会话过期判断、镜像轮询计时及监控时间范围生成，并在 `AGENTS.md` 固化使用约束。全部变更 Oxlint、全仓 oxfmt、TypeScript 与差异格式检查通过；GitNexus 当前工作区检测为 LOW、未影响执行流程，与 `master` 的累计比较为 CRITICAL。 |
 | 2026-09-10 | 完成前端 API 层重构：以 Axios 替换 `openapi-fetch`，移除 Core/Services 生成式 schema、旧客户端及兼容 Hook，将认证、AI、实例、网络、存储等请求与静态类型按资源模块收敛；公共层统一认证刷新、错误、SSE 和隔离预签名上传，写请求幂等迁入 API 内部，页面只提交无 key DTO。同步新增 API 对接流程并收敛工程文档职责，`PROJECT-STATUS.md` 只保留状态、缺口和日期记录。全仓 oxfmt 与格式检查、Oxlint、TypeScript、差异格式及本地文档链接检查通过；GitNexus 累计工作区变更为 CRITICAL，来自 223 个文件的累计改动及 216 条受影响流程。 |

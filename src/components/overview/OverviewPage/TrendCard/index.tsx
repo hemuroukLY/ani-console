@@ -1,8 +1,18 @@
+import { Button, Empty, Spin } from "@arco-design/web-react";
+import { useQuery } from "@tanstack/react-query";
 import type { EChartsOption, LineSeriesOption } from "echarts";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 import { CoreLineBarChart } from "@/components/common";
-import type { HomeTimeRange, HomeTrendData } from "../types";
+import { useListErrorNotification } from "@/hooks/useListErrorNotification";
+import { getErrorMessage } from "@/lib/errors";
+import type {
+  HomeOverviewDataSource,
+  HomeResourceTrendMetric,
+  HomeTimeRange,
+  HomeTrendData,
+  HomeTrendSnapshot,
+} from "../types";
 import { PeriodSwitch } from "../PeriodSwitch";
 import styles from "../index.module.css";
 
@@ -10,9 +20,44 @@ function areaColor(color: string) {
   return color.toUpperCase() === "#67C23A" ? "rgba(103, 194, 58, 0.12)" : "rgba(0, 121, 211, 0.15)";
 }
 
-export function TrendCard({ data, testId }: { data: HomeTrendData; testId: string }) {
+const emptyTrend: HomeTrendSnapshot = {
+  labels: [],
+  headlines: [],
+  series: [],
+};
+
+function percentTooltip(value: unknown) {
+  const number = Number(value);
+  return Number.isFinite(number) ? `${Number(number.toFixed(2))}%` : "-";
+}
+
+export function TrendCard({
+  data,
+  dataSource,
+  metric,
+  testId,
+}: {
+  data: HomeTrendData;
+  dataSource: HomeOverviewDataSource;
+  metric: HomeResourceTrendMetric;
+  testId: string;
+}) {
   const [range, setRange] = useState<HomeTimeRange>("7d");
-  const current = data.ranges[range];
+  const trendQuery = useQuery({
+    queryKey: ["home-resource-trend", metric, range],
+    queryFn: () => dataSource.getResourceTrend(metric, range),
+    retry: 1,
+    staleTime: 60_000,
+  });
+  useListErrorNotification({
+    id: `home-resource-trend:${metric}:${range}`,
+    title: `${data.title}加载失败`,
+    error: trendQuery.error,
+    fallback: "数据服务暂不可用",
+  });
+  const current = trendQuery.data ?? emptyTrend;
+  const hasData = current.series.some((series) => series.values.length > 0);
+  const errorMessage = getErrorMessage(trendQuery.error, "数据服务暂不可用");
 
   const option = useMemo<EChartsOption>(() => {
     const series: LineSeriesOption[] = current.series.map((item) => ({
@@ -45,6 +90,7 @@ export function TrendCard({ data, testId }: { data: HomeTrendData; testId: strin
       grid: { left: 40, right: 16, top: 8, bottom: 30 },
       tooltip: {
         trigger: "axis",
+        valueFormatter: percentTooltip,
         backgroundColor: "rgba(255, 255, 255, 0.94)",
         borderColor: "#fff",
         borderWidth: 2,
@@ -66,7 +112,11 @@ export function TrendCard({ data, testId }: { data: HomeTrendData; testId: strin
         interval: data.yInterval,
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: "rgba(0, 0, 0, 0.4)", fontSize: 12 },
+        axisLabel: {
+          color: "rgba(0, 0, 0, 0.4)",
+          fontSize: 12,
+          formatter: "{value}%",
+        },
         splitLine: { lineStyle: { color: "rgba(0, 0, 0, 0.08)", width: 0.5 } },
       },
       series,
@@ -77,21 +127,41 @@ export function TrendCard({ data, testId }: { data: HomeTrendData; testId: strin
     <section className={clsx(styles.panel, styles.trendPanel)} data-testid={`trend-card-${testId}`}>
       <header className={styles.panelHeader}>
         <h2>{data.title}</h2>
-        <PeriodSwitch value={range} onChange={setRange} ariaLabel={`${testId}时间范围`} />
+        <PeriodSwitch value={range} onChange={setRange} ariaLabel={`${data.title}时间范围`} />
       </header>
-      <div className={styles.trendHeadlines}>
-        {current.headlines.map((headline) => (
-          <div key={headline.label} className={styles.trendHeadline}>
-            <span className={styles.legendDot} style={{ background: headline.color }} />
-            <span className={styles.trendHeadlineLabel}>{headline.label}</span>
-            <strong>{headline.value}</strong>
-            <span className={styles.trendHeadlineUnit}>{headline.unit}</span>
+      {trendQuery.isLoading ? (
+        <div className={styles.trendState} role="status">
+          <Spin />
+          <span>正在加载趋势数据...</span>
+        </div>
+      ) : trendQuery.isError ? (
+        <div className={styles.trendState}>
+          <Empty description={errorMessage} />
+          <Button type="primary" size="small" onClick={() => trendQuery.refetch()}>
+            重试
+          </Button>
+        </div>
+      ) : !hasData ? (
+        <div className={styles.trendState}>
+          <Empty description="暂无数据" />
+        </div>
+      ) : (
+        <>
+          <div className={styles.trendHeadlines}>
+            {current.headlines.map((headline) => (
+              <div key={headline.label} className={styles.trendHeadline}>
+                <span className={styles.legendDot} style={{ background: headline.color }} />
+                <span className={styles.trendHeadlineLabel}>{headline.label}</span>
+                <strong>{headline.value}</strong>
+                <span className={styles.trendHeadlineUnit}>{headline.unit}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <div className={styles.trendChart}>
-        <CoreLineBarChart option={option} style={{ width: "100%", height: "100%" }} />
-      </div>
+          <div className={styles.trendChart}>
+            <CoreLineBarChart option={option} style={{ width: "100%", height: "100%" }} />
+          </div>
+        </>
+      )}
     </section>
   );
 }
