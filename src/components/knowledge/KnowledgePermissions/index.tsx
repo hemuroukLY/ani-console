@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@arco-design/web-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { getKnowledgeBasePermissions, updateKnowledgeBasePermissions } from "@/api/knowledge";
 import { formatDateTime } from "@/lib/format";
@@ -36,6 +36,7 @@ function parseUserIds(value?: string) {
 
 export function KnowledgePermissions({ kbId }: { kbId: string }) {
   const [form] = Form.useForm<PermissionFormValues>();
+  const initializedKb = useRef<string>();
   const qc = useQueryClient();
   const permissions = useQuery({
     meta: {
@@ -49,18 +50,19 @@ export function KnowledgePermissions({ kbId }: { kbId: string }) {
     queryFn: () => getKnowledgeBasePermissions(kbId),
   });
   useEffect(() => {
-    if (!permissions.data) return;
+    // Background refetches must not replace unsaved edits, including after a failed save.
+    if (!permissions.data || initializedKb.current === kbId) return;
     form.setFieldsValue({
       public_read: permissions.data.public_read,
       allowed_user_ids_text: permissions.data.allowed_user_ids.join("\n"),
     });
-  }, [form, permissions.data]);
+    initializedKb.current = kbId;
+  }, [form, kbId, permissions.data]);
 
   const update = useMutation({
     meta: {
       feedback: {
-        channel: "notification",
-        id: "knowledge-permissions-update",
+        channel: "message",
         action: "保存知识库权限",
         successText: "知识库权限已保存",
         errorFallback: "保存知识库权限失败",
@@ -103,6 +105,7 @@ export function KnowledgePermissions({ kbId }: { kbId: string }) {
       />
       <Form
         form={form}
+        disabled={update.isPending}
         layout="vertical"
         initialValues={{ public_read: false, allowed_user_ids_text: "" }}
       >

@@ -230,7 +230,7 @@ export function KnowledgeBasesPage() {
           }}
         />
       </ListPageFrame>
-      <CreateKnowledgeBaseModal visible={createVisible} onCancel={() => setCreateVisible(false)} />
+      {createVisible ? <CreateKnowledgeBaseModal onCancel={() => setCreateVisible(false)} /> : null}
     </>
   );
 }
