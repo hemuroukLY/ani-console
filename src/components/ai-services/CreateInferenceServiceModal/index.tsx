@@ -93,6 +93,7 @@ export function CreateInferenceServiceModal({
   const [modelId, setModelId] = useState(initialModelId ?? "");
   const [modelVersionId, setModelVersionId] = useState(initialModelVersionId ?? "");
   const [replicas, setReplicas] = useState(1);
+  const [startupCommand, setStartupCommand] = useState("");
   const [computeSpec, setComputeSpec] = useState<GpuInstanceComputeSpec>(
     DEFAULT_GPU_INSTANCE_COMPUTE_SPEC,
   );
@@ -266,6 +267,7 @@ export function CreateInferenceServiceModal({
       },
     },
     mutationFn: async () => {
+      const command = startupCommand.trim();
       if (!name.trim() || !modelVersionId) throw new Error("请完整填写服务名称并选择模型版本");
       if (!selectedModelVersion) throw new Error("请选择有效的模型版本");
       const manualImageRef = runtimeImageRef.trim();
@@ -310,6 +312,7 @@ export function CreateInferenceServiceModal({
           ? { image_id: runtimeImage!.id }
           : { image_ref: manualImageRef }),
         replicas,
+        ...(command ? { engine: { command: [command] } } : {}),
         placement_mode: "auto" as const,
         resources: {
           cpu: resources.cpu,
@@ -350,7 +353,7 @@ export function CreateInferenceServiceModal({
             placeholder="请选择已就绪的模型"
             options={(models.data?.items ?? []).map((item) => ({
               value: item.id,
-              label: item.display_name || item.name,
+              label: item.name,
             }))}
             onChange={(value) => {
               setModelId(value);
@@ -405,8 +408,12 @@ export function CreateInferenceServiceModal({
             />
           </Form.Item>
         )}
-        <Form.Item label="推理引擎">
-          <Input value="平台默认启动命令与环境" readOnly />
+        <Form.Item label="启动命令">
+          <Input
+            value={startupCommand}
+            onChange={setStartupCommand}
+            placeholder="平台默认启动命令与环境"
+          />
         </Form.Item>
         <div className="grid grid-cols-1 gap-x-4 md:grid-cols-2">
           <Form.Item label="加速器规格" required>

@@ -41,7 +41,7 @@ export function ResourceNameId(props: ResourceNameIdProps) {
 
   return (
     <div className={styles.nameCell}>
-      <span className={styles.name}>
+      <span className={styles.name} title={name}>
         {canOpen ? (
           <button type="button" className={styles.nameButton} onClick={handleOpen}>
             {name}

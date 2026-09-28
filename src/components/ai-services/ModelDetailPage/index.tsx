@@ -24,7 +24,7 @@ import {
 } from "@/lib/ai-models";
 import { ModelRelatedResources } from "./ModelRelatedResources";
 import { ModelOperationHistory } from "./ModelOperationHistory";
-import { ModelRecommendedConfiguration } from "./ModelRecommendedConfiguration";
+// import { ModelRecommendedConfiguration } from "./ModelRecommendedConfiguration";
 
 export function ModelDetailPage({ modelId }: { modelId: string }) {
   const navigate = useNavigate();
@@ -102,11 +102,8 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
   return (
     <>
       <DetailPageFrame
-        breadcrumbs={[
-          ...navigationBreadcrumbsForPath("/models"),
-          { label: item.display_name || item.name },
-        ]}
-        title={item.display_name || item.name}
+        breadcrumbs={[...navigationBreadcrumbsForPath("/models"), { label: item.name }]}
+        title={item.name}
         status={<StatusTag status={item.status} />}
         icon={<AliIcon name="moxing" size={28} />}
         headerItems={[
@@ -135,9 +132,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
                       Modal.confirm({
                         title: "删除模型",
                         content:
-                          "确定删除「" +
-                          (item.display_name || item.name) +
-                          "」？有关联推理服务时后端可能拒绝删除。",
+                          "确定删除「" + item.name + "」？有关联推理服务时后端可能拒绝删除。",
                         okButtonProps: { status: "danger" },
                         onOk: () => remove.mutateAsync(),
                       })
@@ -161,11 +156,12 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
             label: "关联资源",
             content: <ModelRelatedResources model={item} />,
           },
-          {
-            key: "recommended-configuration",
-            label: "推荐配置",
-            content: <ModelRecommendedConfiguration />,
-          },
+          // 推荐配置暂时隐藏，后续开放时恢复此项及对应导入。
+          // {
+          //   key: "recommended-configuration",
+          //   label: "推荐配置",
+          //   content: <ModelRecommendedConfiguration />,
+          // },
           {
             key: "operation-history",
             label: "操作记录",

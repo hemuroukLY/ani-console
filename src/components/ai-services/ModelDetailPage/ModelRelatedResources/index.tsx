@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { listInferenceServices, type InferenceService } from "@/api/ai-services/inference";
 import type { Model } from "@/api/ai-services/models";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable } from "@/components/common";
+import { InferenceStatusTag } from "@/components/ai-services/InferenceStatusTag";
 import { formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
 import { navigateToResourceDetail } from "@/lib/resources";
@@ -53,7 +54,7 @@ export function ModelRelatedResources({ model }: { model: Model }) {
           {
             title: "状态",
             width: 120,
-            render: (_, service) => <StatusTag status={service.status} />,
+            render: (_, service) => <InferenceStatusTag {...service} />,
           },
           { title: "模型", dataIndex: "model", ellipsis: true },
           {

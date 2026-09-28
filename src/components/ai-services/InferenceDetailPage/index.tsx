@@ -11,7 +11,6 @@ import {
   Menu,
   Modal,
   Space,
-  Tooltip,
   Typography,
 } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
@@ -26,9 +25,9 @@ import {
   DetailPagePlaceholder,
   ImageNameText,
   ResourceId,
-  StatusTag,
 } from "@/components/common";
 import { copyToClipboard } from "@/lib/clipboard";
+import { InferenceStatusTag } from "@/components/ai-services/InferenceStatusTag";
 import { formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
 import { InferenceInvocationTest } from "./InferenceInvocationTest";
@@ -123,31 +122,7 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
       return invocationUrl.startsWith("/") ? invocationUrl : "-";
     }
   })();
-  const engineCommand = item.engine?.command ?? [];
-  const engineCommandText = engineCommand.join(" ");
-  const engineSource = `${engineCommandText} ${item.image_ref ?? ""}`;
-  const engineName = /\bvllm\b/i.test(engineSource)
-    ? "vLLM"
-    : /\btei\b|text-embeddings-inference/i.test(engineSource)
-      ? "TEI"
-      : engineCommand[0] || "-";
-  const engineEnvironment = new Map(
-    (item.engine?.env ?? []).map((entry) => [entry.name.toUpperCase(), entry.value]),
-  );
-  const precisionArgument = engineCommand.find(
-    (_argument, index) =>
-      index > 0 && ["--dtype", "--torch-dtype", "--precision"].includes(engineCommand[index - 1]),
-  );
-  const precision =
-    precisionArgument ??
-    engineEnvironment.get("VLLM_DTYPE") ??
-    engineEnvironment.get("TORCH_DTYPE") ??
-    engineEnvironment.get("PRECISION");
-  const normalizedPrecision = precision
-    ?.replace(/^float16$/i, "fp16")
-    .replace(/^float32$/i, "fp32")
-    .replace(/^bfloat16$/i, "bf16");
-  const engineLabel = [engineName, normalizedPrecision].filter(Boolean).join(" · ");
+  const engineCommandText = item.engine?.command?.join(" ") || "-";
   const requestPolicy =
     policies.data?.policies.find(
       (policy) => policy.status === "enabled" && policy.rate_limits.qps != null,
@@ -157,16 +132,7 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
   const qpsLabel = policies.isLoading
     ? "QPS 加载中…"
     : `QPS ${requestPolicy?.rate_limits.qps ?? "-"}`;
-  const statusDetail = [item.status_reason, item.status_message].filter(Boolean).join("：");
-  const serviceStatus = statusDetail ? (
-    <Tooltip content={statusDetail}>
-      <span className="inline-flex">
-        <StatusTag status={item.status} />
-      </span>
-    </Tooltip>
-  ) : (
-    <StatusTag status={item.status} />
-  );
+  const serviceStatus = <InferenceStatusTag {...item} />;
   const actions = (
     <Dropdown
       trigger="click"
@@ -265,8 +231,10 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
                 value: item.served_model_name || item.model,
               },
               {
-                label: "推理引擎",
-                value: engineLabel,
+                label: "启动命令",
+                value: (
+                  <span className="wrap-anywhere whitespace-pre-wrap">{engineCommandText}</span>
+                ),
               },
               {
                 label: "OpenAI 兼容",

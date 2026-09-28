@@ -100,9 +100,7 @@ export function ModelsPage() {
     {
       key: "name",
       title: "名称 / ID",
-      render: (_, item) => (
-        <ResourceNameId name={item.display_name || item.name} id={item.id} type="model" />
-      ),
+      render: (_, item) => <ResourceNameId name={item.name} id={item.id} type="model" />,
     },
     {
       key: "status",
@@ -276,7 +274,7 @@ export function ModelsPage() {
               onClick: (item) =>
                 void Modal.confirm({
                   title: "删除模型",
-                  content: `确定删除「${item.display_name || item.name}」？有关联推理服务时后端将拒绝删除。`,
+                  content: `确定删除「${item.name}」？有关联推理服务时后端将拒绝删除。`,
                   okButtonProps: { status: "danger" },
                   onOk: () => remove.mutateAsync(item),
                 }),

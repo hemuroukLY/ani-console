@@ -1,5 +1,6 @@
 import { Form, Input, InputNumber, Modal } from "@arco-design/web-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 
 import {
   createKnowledgeBase,
@@ -57,9 +58,19 @@ export function CreateKnowledgeBaseModal({
       onCreated?.(item);
     },
   });
+  const modelExtra = (
+    <>
+      未指定时使用服务端默认模型，
+      <Link to="/models" target="_blank" rel="noopener noreferrer">
+        打开模型仓库
+      </Link>
+    </>
+  );
+
   return (
     <Modal
       title="创建知识库"
+      className="[&_.arco-modal-content]:max-h-[calc(100vh-192px)] [&_.arco-modal-content]:overflow-y-auto"
       visible
       confirmLoading={create.isPending}
       onCancel={() => {
@@ -89,18 +100,10 @@ export function CreateKnowledgeBaseModal({
         <Form.Item label="描述" field="description">
           <Input.TextArea placeholder="说明知识库的内容和用途" maxLength={500} showWordLimit />
         </Form.Item>
-        <Form.Item
-          label="向量化模型"
-          field="embedding_model"
-          extra="使用默认模型时由服务端配置决定实际模型。若创建或向量化失败，请管理员检查默认 embedding 配置与推理服务路由，然后重试；当前表单会保留。"
-        >
+        <Form.Item label="向量化模型" field="embedding_model" extra={modelExtra}>
           <KnowledgeModelSelect capability="embedding" />
         </Form.Item>
-        <Form.Item
-          label="默认推理模型"
-          field="default_inference_service"
-          extra="可选；未指定时使用服务端默认模型。"
-        >
+        <Form.Item label="推理模型" field="default_inference_service" extra={modelExtra}>
           <KnowledgeModelSelect capability="text-generation" />
         </Form.Item>
         <div className="grid grid-cols-2 gap-4">

@@ -791,7 +791,6 @@
   transition: width 0.2s ease;
 }
 
-.topnav-search.arco-input-group-wrapper:hover,
 .topnav-search.arco-input-group-wrapper:focus-within {
   width: min(400px, 30vw);
 }
@@ -891,6 +890,10 @@
   transition:
     opacity 0.22s ease,
     filter 0.22s ease;
+}
+
+.topnav-kaiwu:hover {
+  background: var(--color-white);
 }
 
 .topnav-kaiwu:hover,

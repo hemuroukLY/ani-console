@@ -41,9 +41,6 @@ export function getReadyModelOptions(
   }
   return Array.from(byName.values()).map((model) => ({
     value: model.name,
-    label:
-      model.display_name && model.display_name !== model.name
-        ? `${model.display_name}（${model.name}）`
-        : model.name,
+    label: model.name,
   }));
 }

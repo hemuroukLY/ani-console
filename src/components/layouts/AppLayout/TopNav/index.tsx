@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Dropdown, Input, Modal } from "@arco-design/web-react";
 import {
   IconApps,
@@ -17,6 +17,7 @@ import {
 import clsx from "clsx";
 import { useState } from "react";
 import { logout as logoutRequest } from "@/api/auth";
+import brandLogo from "@/assets/brand/wordmark.png";
 import { formatDateTime } from "@/lib/format";
 import { useAuthStore } from "@/stores/auth";
 import { useBrandingStore } from "@/stores/branding";
@@ -129,10 +130,15 @@ export function TopNav({
     <>
       <header className="top-nav h-(--topnav-height) basis-(--topnav-height)">
         <div className="topnav-left">
-          <div className="topnav-brand" aria-label={name}>
-            <span className="topnav-brand-mark">{name.slice(0, 1).toUpperCase()}</span>
-            <span className="topnav-brand-name">{name}</span>
-          </div>
+          <Link
+            to="/"
+            className="flex shrink-0 items-center rounded"
+            aria-label="常青云，返回控制台首页"
+            title="返回控制台首页"
+            onClick={() => onProductPanelVisibleChange(false)}
+          >
+            <img src={brandLogo} alt="常青云" className="block h-[25px] w-auto" />
+          </Link>
           <nav className="topnav-primary" aria-label="主导航">
             <button
               type="button"

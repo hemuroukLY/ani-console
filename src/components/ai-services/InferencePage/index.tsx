@@ -10,13 +10,8 @@ import {
 } from "@/api/ai-services/inference";
 
 import { CreateInferenceServiceModal } from "@/components/ai-services/CreateInferenceServiceModal";
-import {
-  ResourceNameId,
-  ListPageFrame,
-  StatusTag,
-  type ListColumn,
-  ListDataTable,
-} from "@/components/common";
+import { InferenceStatusTag } from "@/components/ai-services/InferenceStatusTag";
+import { ResourceNameId, ListPageFrame, type ListColumn, ListDataTable } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 
 type StatusFilter = "all" | "pending" | "deploying" | "running" | "stopping" | "stopped" | "failed";
@@ -136,17 +131,22 @@ export function InferencePage() {
       key: "status",
       title: "状态",
       width: 120,
-      render: (_, item) => <StatusTag status={item.status} />,
+      render: (_, item) => <InferenceStatusTag {...item} />,
     },
     {
       key: "model",
       title: "模型版本",
-      dataIndex: "model",
-      ellipsis: true,
+      render: (_, item) => (
+        <ResourceNameId
+          name={item.served_model_name || "-"}
+          id={item.model_version_id}
+          openable={false}
+        />
+      ),
     },
     {
       key: "engine",
-      title: "引擎",
+      title: "启动命令",
       render: (_, item) => item.engine?.command?.join(" ") || "-",
       ellipsis: true,
     },
