@@ -2,6 +2,7 @@ import type { AsyncTask } from "@/api/tasks";
 import type { CoreDevProfileInfo, CursorPageParams } from "@/api/types";
 
 export type StorageResourceState = "pending" | "available" | "failed" | "deleting" | "deleted";
+export type StorageVolumeMode = "block" | "filesystem";
 
 export interface StorageVolumeAutoSnapshotPolicy {
   enabled: boolean;
@@ -22,6 +23,7 @@ export interface StorageVolume {
   name: string;
   size_gib: number;
   storage_class: string;
+  volume_mode: StorageVolumeMode;
   zone?: string | null;
   volume_type?: "ssd" | "hdd" | "high_performance_ssd" | null;
   iops?: number | null;
@@ -52,6 +54,7 @@ export interface StorageVolume {
 }
 
 export interface StorageVolumeListParams extends CursorPageParams {
+  volume_mode?: StorageVolumeMode;
   state?: string;
   search_field?: "name" | "id";
   keyword?: string;
@@ -69,6 +72,7 @@ export interface CreateStorageVolumeInput {
   name: string;
   size_gib: number;
   storage_class: string;
+  volume_mode?: StorageVolumeMode;
   zone?: string;
   volume_type?: "ssd" | "hdd" | "high_performance_ssd";
   encrypted?: boolean;

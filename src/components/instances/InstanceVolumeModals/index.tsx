@@ -25,6 +25,7 @@ function attachedVolumeId(volume: NonNullable<InstanceRecord["volumes"]>[number]
 
 export function InstanceAttachVolumeModal({ instance, onCancel, onSubmitted }: ModalProps) {
   const [form] = Form.useForm<AttachValues>();
+  const volumeMode = instance.kind === "vm" ? "block" : "filesystem";
   const volumes = useQuery({
     meta: {
       errorNotification: {
@@ -33,11 +34,12 @@ export function InstanceAttachVolumeModal({ instance, onCancel, onSubmitted }: M
         fallback: "请求失败，请稍后重试",
       },
     },
-    queryKey: ["volumes", withId("instance-attach", instance.kind, instance.id)],
+    queryKey: ["volumes", withId("instance-attach", instance.kind, instance.id), volumeMode],
     queryFn: () =>
       listVolumes({
         limit: 100,
         state: "pending,available",
+        volume_mode: volumeMode,
         available_for_instance_id: instance.id,
       }),
   });
@@ -51,6 +53,9 @@ export function InstanceAttachVolumeModal({ instance, onCancel, onSubmitted }: M
       },
     },
     mutationFn: async (values: AttachValues) => {
+      if (!options.some((volume) => volume.id === values.volumeId)) {
+        throw new Error("请选择与实例类型匹配的可挂载云盘；卷用途不可修改，需按目标用途重新创建");
+      }
       const data = await applyInstanceLifecycle(instance.id, {
         action: "attach_volume",
         volume_id: values.volumeId,
@@ -61,13 +66,7 @@ export function InstanceAttachVolumeModal({ instance, onCancel, onSubmitted }: M
     },
     onSuccess: onSubmitted,
   });
-  const attachedIds = new Set((instance.volumes ?? []).map(attachedVolumeId).filter(Boolean));
-  const options = ((volumes.data?.items ?? []) as StorageVolume[]).filter(
-    (volume) =>
-      ["pending", "available"].includes(volume.state) &&
-      !volume.mount_instance_id &&
-      !attachedIds.has(volume.id),
-  );
+  const options = (volumes.data?.items ?? []) as StorageVolume[];
 
   return (
     <Modal
@@ -82,6 +81,11 @@ export function InstanceAttachVolumeModal({ instance, onCancel, onSubmitted }: M
         <Form.Item
           field="volumeId"
           label="云盘"
+          extra={
+            instance.kind === "vm"
+              ? "仅可选择 VM 数据盘；容器目录卷需按 VM 用途重新创建。"
+              : "仅可选择容器目录卷；VM 数据盘需按容器用途重新创建。"
+          }
           rules={[{ required: true, message: "请选择云盘" }]}
         >
           <Select loading={volumes.isLoading} placeholder="请选择可挂载云盘" showSearch>

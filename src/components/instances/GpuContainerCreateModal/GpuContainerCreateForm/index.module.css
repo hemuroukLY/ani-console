@@ -1,10 +1,6 @@
 .form {
   display: flex;
   flex-direction: column;
-  height: 467px;
-  max-height: calc(100vh - 192px);
-  min-height: 0;
-  overflow: hidden;
 }
 
 .steps {
@@ -14,11 +10,5 @@
 }
 
 .content {
-  flex: 1;
-  min-height: 0;
   padding-top: 28px;
-  padding-inline-end: 4px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }

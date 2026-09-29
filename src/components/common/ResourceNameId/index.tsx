@@ -12,6 +12,7 @@ type ResourceNameIdBaseProps = {
   name: string;
   id?: string | null;
   openable?: boolean;
+  copyable?: boolean;
 };
 
 export type ResourceNameIdProps = ResourceNameIdBaseProps &
@@ -22,7 +23,7 @@ export type ResourceNameIdProps = ResourceNameIdBaseProps &
   );
 
 export function ResourceNameId(props: ResourceNameIdProps) {
-  const { name, id, openable = true } = props;
+  const { name, id, openable = true, copyable = true } = props;
   const navigate = useNavigate();
   const canOpen = openable && Boolean(props.type && id && id !== "-");
 
@@ -50,7 +51,9 @@ export function ResourceNameId(props: ResourceNameIdProps) {
           name
         )}
       </span>
-      <span className={styles.nameId}>{id && id !== "-" ? <ResourceId value={id} /> : "-"}</span>
+      <span className={styles.nameId}>
+        {id && id !== "-" ? <ResourceId value={id} copyable={copyable} /> : "-"}
+      </span>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Form, Input, InputNumber, Modal, Select, Typography } from "@arco-design/web-react";
+import { Form, Input, InputNumber, Modal, Select } from "@arco-design/web-react";
 import { useEffect, useState } from "react";
 import {
   listNetworkSubnets,
@@ -14,17 +14,15 @@ import {
 } from "@/api/storage/filesystems";
 
 type Filesystem = StorageFilesystem;
-type FilesystemProtocol = "nfs" | "cephfs";
+type FilesystemProtocol = "nfs";
 type FilesystemPerformanceMode = "standard" | "throughput";
 type Vpc = NetworkVPC;
 type Subnet = NetworkSubnet;
 
 export function CreateFilesystemModal({
-  visible,
   onCancel,
   onCreated,
 }: {
-  visible: boolean;
   onCancel: () => void;
   onCreated?: (filesystem: Filesystem) => void;
 }) {
@@ -45,7 +43,6 @@ export function CreateFilesystemModal({
     },
     queryKey: ["network-vpcs", "filesystem-create"],
     queryFn: () => listNetworkVpcs({ limit: 100 }),
-    enabled: visible,
   });
   const subnets = useQuery({
     meta: {
@@ -57,7 +54,7 @@ export function CreateFilesystemModal({
     },
     queryKey: ["network-subnets", "filesystem-create", vpcId],
     queryFn: () => listNetworkSubnets({ limit: 100, vpc_id: vpcId || undefined }),
-    enabled: visible && !!vpcId,
+    enabled: !!vpcId,
   });
   // TODO: 子网接口确认按 vpc_id 过滤后，移除此处创建表单的本地兜底过滤。
   const availableSubnets = ((subnets.data?.items ?? []) as Subnet[]).filter(
@@ -103,7 +100,7 @@ export function CreateFilesystemModal({
   });
   return (
     <Modal
-      visible={visible}
+      visible
       title="创建文件存储"
       onCancel={() => {
         reset();
@@ -126,7 +123,6 @@ export function CreateFilesystemModal({
         <Form.Item label="协议" required>
           <Select value={protocol} onChange={setProtocol}>
             <Select.Option value="nfs">NFS</Select.Option>
-            <Select.Option value="cephfs">CephFS</Select.Option>
           </Select>
         </Form.Item>
         <Form.Item label="性能模式" required>
@@ -144,38 +140,37 @@ export function CreateFilesystemModal({
             onChange={(value) => setSizeGiB(Number(value ?? 1))}
           />
         </Form.Item>
-        <Form.Item label="VPC" required>
-          <Select
-            value={vpcId || undefined}
-            onChange={setVpcId}
-            loading={vpcs.isLoading}
-            placeholder="请选择 VPC"
-          >
-            {((vpcs.data?.items ?? []) as Vpc[]).map((item) => (
-              <Select.Option key={item.id} value={item.id}>
-                {item.name} · {item.cidr}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item label="子网" required>
-          <Select
-            value={subnetId || undefined}
-            onChange={setSubnetId}
-            loading={subnets.isLoading}
-            disabled={!vpcId}
-            placeholder={vpcId ? "请选择挂载目标子网" : "请先选择 VPC"}
-          >
-            {availableSubnets.map((item) => (
-              <Select.Option key={item.id} value={item.id}>
-                {item.name} · {item.cidr}
-              </Select.Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Typography.Text type="secondary">
-          创建完成后可在详情页查看挂载目标和挂载命令。
-        </Typography.Text>
+        <div className="grid grid-cols-2 gap-3">
+          <Form.Item label="VPC" required>
+            <Select
+              value={vpcId || undefined}
+              onChange={setVpcId}
+              loading={vpcs.isLoading}
+              placeholder="请选择 VPC"
+            >
+              {((vpcs.data?.items ?? []) as Vpc[]).map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.name} · {item.cidr}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="子网" required>
+            <Select
+              value={subnetId || undefined}
+              onChange={setSubnetId}
+              loading={subnets.isLoading}
+              disabled={!vpcId}
+              placeholder={vpcId ? "请选择挂载目标子网" : "请先选择 VPC"}
+            >
+              {availableSubnets.map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.name} · {item.cidr}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </div>
       </Form>
     </Modal>
   );

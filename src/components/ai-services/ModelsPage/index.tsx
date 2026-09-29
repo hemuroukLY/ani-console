@@ -1,4 +1,4 @@
-import { Modal, Select, Space } from "@arco-design/web-react";
+import { Modal, Select, Space, Tag } from "@arco-design/web-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { deleteModel, listModels } from "@/api/ai-services/models";
@@ -14,7 +14,7 @@ import {
 } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatBytes, formatDateTime } from "@/lib/format";
-import { MODEL_SOURCE_LABELS, type Model } from "@/lib/ai-models";
+import { formatModelCapabilities, MODEL_SOURCE_LABELS, type Model } from "@/lib/ai-models";
 
 type StatusFilter = "all" | "pending" | "available" | "importing" | "failed";
 type SearchField = "name";
@@ -112,6 +112,20 @@ export function ModelsPage() {
       key: "source",
       title: "来源",
       render: (_, item) => MODEL_SOURCE_LABELS[item.source],
+    },
+    {
+      key: "capabilities",
+      title: "任务",
+      render: (_, item) =>
+        item.capabilities?.length ? (
+          <Space wrap size={4}>
+            {item.capabilities.map((capability) => (
+              <Tag key={capability}>{formatModelCapabilities([capability])}</Tag>
+            ))}
+          </Space>
+        ) : (
+          "-"
+        ),
     },
     {
       key: "size",

@@ -117,14 +117,14 @@ export function SandboxInstanceCreateForm({ visible, submitting, onCancel, onSub
       }
       style={{ width: 820 }}
     >
-      <div className="flex h-116.75 max-h-[calc(100vh-192px)] min-h-0 flex-col overflow-hidden">
+      <div className="flex flex-col">
         <WizardSteps
           current={step + 1}
           items={STEP_TITLES}
           size="small"
           className="mx-auto w-full max-w-160 shrink-0"
         />
-        <div className="min-h-0 flex-1 overflow-y-auto pt-7 pr-1 overscroll-contain scrollbar-gutter-stable">
+        <div className="pt-7">
           <Form<FormValues>
             form={form}
             layout="vertical"

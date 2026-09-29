@@ -71,7 +71,7 @@ export function VolumeRelatedResources({ volume }: { volume: StorageVolume }) {
         />
       </div>
       {attachVisible && (
-        <AttachVolumeModal volumeId={volume.id} onCancel={() => setAttachVisible(false)} />
+        <AttachVolumeModal volume={volume} onCancel={() => setAttachVisible(false)} />
       )}
     </>
   );

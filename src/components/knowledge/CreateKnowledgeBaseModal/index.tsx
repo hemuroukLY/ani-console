@@ -61,8 +61,8 @@ export function CreateKnowledgeBaseModal({
   const modelExtra = (
     <>
       未指定时使用服务端默认模型，
-      <Link to="/models" target="_blank" rel="noopener noreferrer">
-        打开模型仓库
+      <Link to="/inference" target="_blank" rel="noopener noreferrer">
+        打开推理服务
       </Link>
     </>
   );
@@ -70,7 +70,6 @@ export function CreateKnowledgeBaseModal({
   return (
     <Modal
       title="创建知识库"
-      className="[&_.arco-modal-content]:max-h-[calc(100vh-192px)] [&_.arco-modal-content]:overflow-y-auto"
       visible
       confirmLoading={create.isPending}
       onCancel={() => {

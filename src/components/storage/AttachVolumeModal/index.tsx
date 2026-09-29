@@ -1,22 +1,24 @@
 import { applyInstanceLifecycle, listInstances, type InstanceRecord } from "@/api/instances";
 import { withId } from "@/lib/id";
+import type { StorageVolume } from "@/api/storage/volumes";
+import { canMountVolumeMode, VOLUME_MODE_LABELS } from "@/lib/volumes";
 import { Form, Modal, Select, Typography } from "@arco-design/web-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 type Instance = InstanceRecord;
-const attachableInstanceKinds = new Set<Instance["kind"]>(["vm", "container", "gpu_container"]);
 
 export function AttachVolumeModal({
-  volumeId,
+  volume,
   onCancel,
   onAttached,
 }: {
-  volumeId: string;
+  volume: StorageVolume;
   onCancel: () => void;
   onAttached?: () => void;
 }) {
   const qc = useQueryClient();
+  const volumeId = volume.id;
   const [instanceId, setInstanceId] = useState("");
   const instances = useQuery({
     meta: {
@@ -36,7 +38,9 @@ export function AttachVolumeModal({
   });
   // TODO: 实例接口确认按 kind/state 过滤后，移除此处关联资源选择的本地兜底过滤。
   const instanceItems = ((instances.data?.items ?? []) as Instance[]).filter(
-    (item) => attachableInstanceKinds.has(item.kind) && ["running", "stopped"].includes(item.state),
+    (item) =>
+      canMountVolumeMode(volume.volume_mode, item.kind) &&
+      ["running", "stopped"].includes(item.state),
   );
 
   useEffect(() => {
@@ -47,7 +51,8 @@ export function AttachVolumeModal({
   const attach = useMutation({
     meta: { feedback: { channel: "message", action: "挂载", errorFallback: "请求失败" } },
     mutationFn: () => {
-      if (!instanceId) throw new Error("请选择挂载实例");
+      if (!instanceItems.some((item) => item.id === instanceId))
+        throw new Error("请选择与卷用途匹配的挂载实例");
       return applyInstanceLifecycle(instanceId, {
         action: "attach_volume",
         volume_id: volumeId,
@@ -73,12 +78,16 @@ export function AttachVolumeModal({
       unmountOnExit
     >
       <Form layout="vertical">
-        <Form.Item label="目标实例" required>
+        <Form.Item
+          label="目标实例"
+          required
+          extra={`卷用途：${VOLUME_MODE_LABELS[volume.volume_mode] ?? "未知"}。仅显示用途匹配的实例；用途不可修改。`}
+        >
           <Select
             value={instanceId || undefined}
             onChange={setInstanceId}
             loading={instances.isLoading}
-            placeholder="请选择运行中或已停止的 VM、容器或 GPU 容器"
+            placeholder="请选择用途匹配且运行中或已停止的实例"
             showSearch
             filterOption={(inputValue, option) =>
               String(option.props.children).toLowerCase().includes(inputValue.toLowerCase())

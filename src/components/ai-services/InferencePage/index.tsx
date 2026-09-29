@@ -141,6 +141,7 @@ export function InferencePage() {
           name={item.served_model_name || "-"}
           id={item.model_version_id}
           openable={false}
+          copyable={false}
         />
       ),
     },
@@ -170,6 +171,7 @@ export function InferencePage() {
     {
       key: "invocationUrl",
       title: "调用地址",
+      ellipsis: true,
       render: (_, item) => item.invocation_url ?? item.endpoint_url ?? "-",
     },
     {

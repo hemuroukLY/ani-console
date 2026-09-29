@@ -1,4 +1,4 @@
-import type { Model, ModelListParams, ModelVersion } from "@/api/ai-services/models";
+import type { Model, ModelVersion } from "@/api/ai-services/models";
 import { compareDateTimesDescending } from "./date";
 
 export type { Model, ModelVersion } from "@/api/ai-services/models";
@@ -24,23 +24,4 @@ export function getLatestModelVersion(model: Model): ModelVersion | undefined {
   return [...(model.versions ?? [])].sort((left, right) =>
     compareDateTimesDescending(left.created_at, right.created_at),
   )[0];
-}
-
-export function isEmbeddingModel(model: Model | undefined) {
-  return model?.capabilities?.includes("embedding") ?? false;
-}
-
-export function getReadyModelOptions(
-  models: readonly Model[] | undefined,
-  capability: NonNullable<ModelListParams["capability"]>,
-) {
-  const byName = new Map<string, Model>();
-  for (const model of models ?? []) {
-    if (model.status !== "ready" || !model.capabilities?.includes(capability)) continue;
-    byName.set(model.name, model);
-  }
-  return Array.from(byName.values()).map((model) => ({
-    value: model.name,
-    label: model.name,
-  }));
 }

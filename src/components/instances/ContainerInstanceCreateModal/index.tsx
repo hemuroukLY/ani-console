@@ -188,9 +188,19 @@ export function ContainerInstanceCreateModal({
   const securityGroups = useListQuery("network-security-groups", "security-groups", () =>
     listNetworkSecurityGroups({ limit: 100 }),
   );
-  const volumes = useListQuery("volumes", "volumes", () =>
-    listVolumes({ limit: 100, in_use: false }),
-  );
+  const volumes = useQuery({
+    meta: {
+      errorNotification: {
+        id: "volumes",
+        action: "创建选项加载",
+        fallback: "请求失败，请稍后重试",
+      },
+    },
+    queryKey: ["volumes", "container-create", "filesystem"],
+    enabled: visible,
+    queryFn: async () =>
+      (await listVolumes({ limit: 100, in_use: false, volume_mode: "filesystem" })).items,
+  });
   const filesystems = useListQuery("filesystems", "filesystems", () =>
     listFilesystems({ limit: 100 }),
   );

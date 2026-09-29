@@ -96,8 +96,8 @@ export function GpuContainerCreateForm({ visible, submitting, onCancel, onSubmit
         fallback: "加载失败，请稍后重试",
       },
     },
-    queryKey: ["volumes", "gpu-container-create"],
-    queryFn: () => listVolumes({ limit: 50, in_use: false }),
+    queryKey: ["volumes", "gpu-container-create", "filesystem"],
+    queryFn: () => listVolumes({ limit: 50, in_use: false, volume_mode: "filesystem" }),
     enabled: visible,
   });
   const images = useQuery({

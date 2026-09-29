@@ -146,6 +146,7 @@ export type {
   StorageVolumeListParams,
   StorageVolumeListResponse,
   StorageVolumeMountHistoryEntry,
+  StorageVolumeMode,
   VolumeOSInitCompleteInput,
   VolumeOSInitCompleteRequest,
   VolumeOSInitGuide,

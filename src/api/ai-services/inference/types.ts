@@ -45,6 +45,8 @@ export interface InferenceService {
 
 export interface InferenceServiceListParams {
   limit?: number;
+  cursor?: string;
+  capability?: "embedding" | "text-generation" | "speech-to-text";
   offset?: number;
   status?: string;
   model?: string;
@@ -54,6 +56,7 @@ export interface InferenceServiceListParams {
 
 export interface InferenceServiceListResponse {
   items: InferenceService[];
+  next_cursor?: string | null;
   total?: number;
 }
 

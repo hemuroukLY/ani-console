@@ -1,4 +1,4 @@
-import { listModels } from "@/api/ai-services/models";
+import { listInferenceServices, type InferenceService } from "@/api/ai-services/inference";
 import {
   createVectorStore,
   type VectorMetric,
@@ -26,17 +26,31 @@ export function CreateVectorStoreModal({
   const models = useQuery({
     meta: {
       errorNotification: {
-        id: withId("models", "embedding"),
+        id: withId("inference-models", "embedding"),
         action: "向量化模型列表加载",
         fallback: "请求失败，请稍后重试",
       },
     },
-    queryKey: ["models", "vector-store-create"],
-    queryFn: () => listModels({ limit: 100, capability: "embedding", status: "ready" }),
+    queryKey: ["inference-services", "model-options", "embedding", "running"],
+    queryFn: async () => {
+      const items: InferenceService[] = [];
+      let cursor: string | undefined;
+      do {
+        const data = await listInferenceServices({
+          limit: 100,
+          cursor,
+          capability: "embedding",
+          status: "running",
+        });
+        items.push(...data.items);
+        cursor = data.next_cursor ?? undefined;
+      } while (cursor);
+      return { items };
+    },
     enabled: visible,
   });
   const modelOptions = useMemo(
-    () => Array.from(new Set((models.data?.items ?? []).map((item) => item.name))),
+    () => (models.data?.items ?? []).map((item) => item.served_model_name),
     [models.data?.items],
   );
   useEffect(() => {

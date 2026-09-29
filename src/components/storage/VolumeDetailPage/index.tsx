@@ -7,6 +7,7 @@ import {
   StatusBadge,
 } from "@/components/common";
 import { withId } from "@/lib/id";
+import { VOLUME_MODE_LABELS } from "@/lib/volumes";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -125,6 +126,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
             title: "基本信息",
             fields: [
               { label: "ID", value: <ResourceId value={volume.id} /> },
+              { label: "用途", value: VOLUME_MODE_LABELS[volume.volume_mode] ?? "-" },
               {
                 label: "容量 / 类型",
                 value: `${volume.size_gib}Gi · ${volumeType}`,
@@ -147,7 +149,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
                 value: mounted ? mountedInstanceNames : "未挂载",
               },
               { label: "OS 初始化", value: osInitStatus },
-              { label: "约束", value: "已挂载不可删 · 扩容不可缩" },
+              { label: "约束", value: "已挂载不可删 · 扩容不可缩 · 用途不可修改" },
               { label: "创建时间", value: formatDateTime(volume.created_at) },
             ],
           },

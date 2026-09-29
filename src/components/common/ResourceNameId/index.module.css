@@ -9,7 +9,7 @@
   display: block;
   max-width: 100%;
   overflow: hidden;
-  color: var(--list-primary);
+  color: var(--color-text-1);
   font-size: 14px;
   line-height: 20px;
   text-overflow: ellipsis;
@@ -22,7 +22,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: inherit;
+  color: var(--list-primary);
   font: inherit;
   text-align: left;
   text-decoration: none;

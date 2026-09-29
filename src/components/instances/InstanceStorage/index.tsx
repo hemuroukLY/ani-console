@@ -48,15 +48,11 @@ export function InstanceStorage({
   const [form] = Form.useForm<MountFormValues>();
   const [mountKind, setMountKind] = useState<MountKind>();
   const [selectedResourceId, setSelectedResourceId] = useState("");
+  const volumeMode = instance.kind === "vm" ? "block" : "filesystem";
   const mountDisabled = isMountDisabled(instance);
   const volumes = instance.volumes ?? [];
   const filesystems = (instance.storage_attachments ?? []).filter(
     (attachment) => attachment.resource_type === "filesystem",
-  );
-  const attachedVolumeIds = new Set(
-    (instance.resource_refs ?? [])
-      .filter((reference) => reference.startsWith("volume/"))
-      .map((reference) => reference.slice("volume/".length)),
   );
   const attachedFilesystemIds = new Set(filesystems.map((filesystem) => filesystem.resource_id));
   const volumeOptions = useQuery({
@@ -67,11 +63,12 @@ export function InstanceStorage({
         fallback: "请求失败，请稍后重试",
       },
     },
-    queryKey: ["volumes", "instance-mount", instance.id],
+    queryKey: ["volumes", "instance-mount", instance.id, volumeMode],
     queryFn: () =>
       listVolumes({
         limit: 100,
         state: "pending,available",
+        volume_mode: volumeMode,
         available_for_instance_id: instance.id,
       }),
     enabled: mountKind === "volume",
@@ -106,13 +103,8 @@ export function InstanceStorage({
       (await listFilesystemMountTargets(selectedResourceId, { limit: 100 })).items,
     enabled: mountKind === "filesystem" && Boolean(selectedResourceId),
   });
-  // TODO: 存储接口确认按状态和 available_for_instance_id 过滤后，移除此处关联资源选择的本地兜底过滤。
-  const availableVolumes = ((volumeOptions.data?.items ?? []) as StorageVolume[]).filter(
-    (volume) =>
-      ["pending", "available"].includes(volume.state) &&
-      !volume.mount_instance_id &&
-      !attachedVolumeIds.has(volume.id),
-  );
+  const availableVolumes = (volumeOptions.data?.items ?? []) as StorageVolume[];
+  // TODO: 文件存储接口确认按状态和 available_for_instance_id 过滤后，移除此处本地兜底过滤。
   const availableFilesystems = (
     (filesystemOptions.data?.items ?? []) as StorageFilesystem[]
   ).filter(
@@ -145,6 +137,9 @@ export function InstanceStorage({
       const resourceId = values.resourceId?.trim();
       const mountPath = values.mountPath?.trim();
       if (!mountKind || !resourceId || !mountPath) return;
+      if (mountKind === "volume" && !availableVolumes.some((volume) => volume.id === resourceId)) {
+        throw new Error("请选择与实例类型匹配的可挂载云盘；卷用途不可修改，需按目标用途重新创建");
+      }
       if (mountKind === "filesystem" && !hasAvailableMountTarget) {
         throw new Error("当前 NFS 没有可用挂载目标");
       }
@@ -262,6 +257,13 @@ export function InstanceStorage({
           <Form.Item
             field="resourceId"
             label={mountKind === "volume" ? "云盘" : "文件存储 NFS"}
+            extra={
+              mountKind === "volume"
+                ? instance.kind === "vm"
+                  ? "仅可选择 VM 数据盘，卷用途创建后不可修改。"
+                  : "仅可选择容器目录卷，卷用途创建后不可修改。"
+                : undefined
+            }
             rules={[{ required: true, message: "请选择资源" }]}
           >
             <Select

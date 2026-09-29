@@ -21,6 +21,7 @@ import {
 } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
+import { VOLUME_MODE_LABELS } from "@/lib/volumes";
 
 type Volume = StorageVolume;
 type StatusFilter = "all" | "pending" | "available" | "mounted" | "failed";
@@ -126,6 +127,12 @@ export function VolumesPage() {
       title: "类型",
       width: 100,
       dataIndex: "storage_class",
+    },
+    {
+      key: "volumeMode",
+      title: "用途",
+      width: 120,
+      render: (_, item) => VOLUME_MODE_LABELS[item.volume_mode] ?? "-",
     },
     {
       key: "encrypted",
@@ -292,9 +299,9 @@ export function VolumesPage() {
           }}
         />
       </ListPageFrame>
-      <CreateVolumeModal visible={createVisible} onCancel={() => setCreateVisible(false)} />
+      {createVisible && <CreateVolumeModal onCancel={() => setCreateVisible(false)} />}
       {attachTarget && (
-        <AttachVolumeModal volumeId={attachTarget.id} onCancel={() => setAttachTarget(null)} />
+        <AttachVolumeModal volume={attachTarget} onCancel={() => setAttachTarget(null)} />
       )}
       {expandTarget && (
         <ExpandVolumeModal volume={expandTarget} onCancel={() => setExpandTarget(null)} />

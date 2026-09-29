@@ -1,4 +1,4 @@
-import { listModels } from "@/api/ai-services/models";
+import { listInferenceServices, type InferenceService } from "@/api/ai-services/inference";
 import {
   deleteKnowledgeBaseSession,
   listKnowledgeBaseCitations,
@@ -13,7 +13,6 @@ import { Spin } from "@arco-design/web-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { getReadyModelOptions } from "@/lib/ai-models";
 import { KnowledgeCitationsDrawer } from "./KnowledgeCitationsDrawer";
 import { KnowledgeConversation } from "./KnowledgeConversation";
 import { KnowledgeSessionsSidebar } from "./KnowledgeSessionsSidebar";
@@ -39,16 +38,34 @@ export function KnowledgeChat({
   const inferenceModels = useQuery({
     meta: {
       errorNotification: {
-        id: withId("knowledge-models", kbId),
+        id: withId("inference-models", "text-generation"),
         action: "推理模型列表加载",
         fallback: "将使用知识库或平台默认模型",
       },
     },
-    queryKey: ["models", "knowledge-base-query", "text-generation"],
-    queryFn: () => listModels({ limit: 100, capability: "text-generation", status: "ready" }),
+    queryKey: ["inference-services", "model-options", "text-generation", "running"],
+    queryFn: async () => {
+      const items: InferenceService[] = [];
+      let cursor: string | undefined;
+      do {
+        const data = await listInferenceServices({
+          limit: 100,
+          cursor,
+          capability: "text-generation",
+          status: "running",
+        });
+        items.push(...data.items);
+        cursor = data.next_cursor ?? undefined;
+      } while (cursor);
+      return { items };
+    },
   });
   const inferenceModelOptions = useMemo(
-    () => getReadyModelOptions(inferenceModels.data?.items, "text-generation"),
+    () =>
+      (inferenceModels.data?.items ?? []).map((service) => ({
+        value: service.served_model_name,
+        label: service.served_model_name,
+      })),
     [inferenceModels.data?.items],
   );
   useEffect(() => {

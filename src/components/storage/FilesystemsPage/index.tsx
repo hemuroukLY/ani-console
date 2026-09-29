@@ -247,7 +247,7 @@ export function FilesystemsPage() {
           }}
         />
       </ListPageFrame>
-      <CreateFilesystemModal visible={createVisible} onCancel={() => setCreateVisible(false)} />
+      {createVisible && <CreateFilesystemModal onCancel={() => setCreateVisible(false)} />}
       {expandTarget && (
         <ExpandFilesystemModal filesystem={expandTarget} onCancel={() => setExpandTarget(null)} />
       )}

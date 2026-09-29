@@ -24,7 +24,22 @@ export function ContainerStorageFields({
   return (
     <>
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-start gap-4">
-        <Form.Item field="volume_id" label="块存储卷">
+        <Form.Item
+          field="volume_id"
+          label="块存储卷"
+          extra="仅可选择容器目录卷；VM 数据盘不能用于容器目录挂载。"
+          rules={[
+            {
+              validator: (value, callback) => {
+                if (value && !volumes?.some((item) => item.id === value)) {
+                  callback("请选择用途为容器目录的卷");
+                } else {
+                  callback();
+                }
+              },
+            },
+          ]}
+        >
           <Select allowClear placeholder="不挂载块存储">
             {volumes?.map((item) => (
               <Select.Option key={item.id} value={item.id}>
