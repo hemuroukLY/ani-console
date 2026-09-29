@@ -12,10 +12,10 @@ tag=""
 
 usage() {
   cat <<'EOF'
-构建 ANI Console 镜像并推送到 Harbor。
+构建 ANI Console 镜像，确认后推送到 Harbor。
 
 用法：
-  bash ./scripts/build-and-push-image.sh [选项]
+  bash ./scripts/publish.sh [选项]
 
 选项：
   --tool auto|docker|buildah  构建工具，默认 auto（Docker 优先）
@@ -25,6 +25,7 @@ usage() {
   -h, --help                  显示帮助
 
 也可使用环境变量 IMAGE_BUILD_TOOL、IMAGE_PLATFORM、IMAGE_REPOSITORY。
+构建完成后，直接回车上传；输入任意内容后回车或按 Ctrl+C 退出，仅保留本地镜像。
 EOF
 }
 
@@ -155,7 +156,6 @@ case "$tool" in
       "$project_root"
     "${runner[@]}" image inspect "$image" \
       --format 'Image={{index .RepoTags 0}} OS={{.Os}} Architecture={{.Architecture}} Size={{.Size}}'
-    "${runner[@]}" push "$image"
     ;;
   buildah)
     "${runner[@]}" build \
@@ -163,6 +163,21 @@ case "$tool" in
       --tag "$image" \
       "$project_root"
     "${runner[@]}" inspect --type image "$image" >/dev/null
+    ;;
+esac
+
+printf '\n打包完成，本地镜像：%s\n' "$image"
+printf '按回车确认上传；输入任意内容后回车或按 Ctrl+C 退出（仅打包）：'
+if ! IFS= read -r confirmation || [[ -n "$confirmation" ]]; then
+  printf '\n已跳过上传，本地镜像已保留：%s\n' "$image"
+  exit 0
+fi
+
+case "$tool" in
+  docker)
+    "${runner[@]}" push "$image"
+    ;;
+  buildah)
     "${runner[@]}" push "$image" "docker://$image"
     ;;
 esac
