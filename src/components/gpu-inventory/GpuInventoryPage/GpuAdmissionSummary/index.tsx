@@ -25,22 +25,38 @@ export function GpuAdmissionSummary() {
   const canCreate = availableSpecs > 0 && (availability.data?.quota_remaining ?? 0) > 0;
 
   return (
-    <Card title="创建准入预检" className="h-full">
+    <Card
+      className="h-full rounded-lg!"
+      bodyStyle={{
+        padding: 24,
+        height: "100%",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <Typography.Title heading={5} className="m-0!">
+          创建准入预检
+        </Typography.Title>
+        <Typography.Text type="secondary">按实时调度结果复核</Typography.Text>
+      </div>
       {availability.isLoading ? (
         <Skeleton animation text={{ rows: 5 }} />
       ) : specs.length === 0 ? (
-        <div className="flex h-56 items-center justify-center">
+        <div className="flex min-h-56 flex-1 items-center justify-center">
           <Empty description="当前没有 GPU 规格可供预检" />
         </div>
       ) : (
-        <Space direction="vertical" size={16} className="w-full">
-          <div className="flex items-center gap-5">
+        <div className="flex min-h-70 flex-1 flex-col gap-6">
+          <div className="flex flex-wrap items-center gap-5">
             <Progress
               type="circle"
-              size="small"
+              width={128}
+              strokeWidth={10}
               percent={Math.round((availableSpecs / specs.length) * 100)}
             />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1 basis-64">
               <Typography.Title heading={5} className="mb-1! mt-0!">
                 {availableSpecs} / {specs.length} 个规格可创建
               </Typography.Title>
@@ -57,6 +73,7 @@ export function GpuAdmissionSummary() {
             <StatusBadge tone="danger">不可用 {unavailableSpecs}</StatusBadge>
           </Space>
           <Alert
+            className="mt-auto"
             type={canCreate ? "success" : "warning"}
             showIcon
             content={
@@ -65,7 +82,7 @@ export function GpuAdmissionSummary() {
                 : "当前没有满足配额与设备条件的规格，创建请求可能被拒绝。"
             }
           />
-        </Space>
+        </div>
       )}
     </Card>
   );

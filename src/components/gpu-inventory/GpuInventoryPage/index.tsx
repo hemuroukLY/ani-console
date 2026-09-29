@@ -1,4 +1,3 @@
-import { Grid } from "@arco-design/web-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ResourcePageFrame } from "@/components/common";
@@ -7,7 +6,6 @@ import { GpuAdmissionSummary } from "./GpuAdmissionSummary";
 import { GpuAnomalyList } from "./GpuAnomalyList";
 import { GpuCapacityMetrics } from "./GpuCapacityMetrics";
 import { GpuModelInventory } from "./GpuModelInventory";
-import { GpuOccupancyDistribution } from "./GpuOccupancyDistribution";
 
 export function GpuInventoryPage() {
   const queryClient = useQueryClient();
@@ -48,16 +46,15 @@ export function GpuInventoryPage() {
           ],
         }}
       >
-        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto rounded-md bg-app-bg p-4">
-          <GpuCapacityMetrics />
-          <Grid.Row gutter={[16, 16]} className="mt-4">
-            <Grid.Col xs={24} lg={9} className="min-w-0">
-              <GpuOccupancyDistribution />
-            </Grid.Col>
-            <Grid.Col xs={24} lg={15} className="min-w-0">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <div className="grid min-w-0 grid-rows-2 gap-5">
+              <GpuCapacityMetrics />
+            </div>
+            <div className="min-w-0 lg:col-span-2">
               <GpuAdmissionSummary />
-            </Grid.Col>
-          </Grid.Row>
+            </div>
+          </div>
           <GpuModelInventory onCreate={() => setCreateVisible(true)} />
           <section className="mt-5 min-w-0">
             <GpuAnomalyList />

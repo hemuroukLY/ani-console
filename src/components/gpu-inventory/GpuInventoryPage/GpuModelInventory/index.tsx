@@ -46,7 +46,7 @@ export function GpuModelInventory({ onCreate }: { onCreate: () => void }) {
         data={modelInventory}
         loading={occupancy.isLoading}
         pagination={false}
-        scroll={{ x: false, y: false }}
+        scroll={{ x: 850, y: false }}
         emptyIconClassName="icon-GPU"
         emptyText="暂无 GPU 型号库存"
         tableLabel="GPU 型号库存"
@@ -55,14 +55,35 @@ export function GpuModelInventory({ onCreate }: { onCreate: () => void }) {
             key: "gpuType",
             title: "GPU 型号",
             dataIndex: "gpuType",
+            width: 200,
             ellipsis: true,
           },
-          { key: "total", title: "总量", dataIndex: "total" },
-          { key: "available", title: "可用", dataIndex: "available" },
-          { key: "inUse", title: "占用中", dataIndex: "inUse" },
+          {
+            key: "total",
+            title: "总量",
+            width: 100,
+            ellipsis: true,
+            dataIndex: "total",
+          },
+          {
+            key: "available",
+            title: "可用",
+            width: 100,
+            ellipsis: true,
+            dataIndex: "available",
+          },
+          {
+            key: "inUse",
+            title: "占用中",
+            width: 100,
+            ellipsis: true,
+            dataIndex: "inUse",
+          },
           {
             key: "unavailable",
             title: "异常 / 维护",
+            width: 100,
+            ellipsis: true,
             dataIndex: "unavailable",
           },
           {

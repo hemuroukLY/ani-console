@@ -1,31 +1,54 @@
-import { Card, Grid, Skeleton } from "@arco-design/web-react";
+import { Card, Skeleton, Statistic, Typography } from "@arco-design/web-react";
+import { IconApps, IconUser } from "@arco-design/web-react/icon";
 import { useQuery } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { getMyQuota } from "@/api/gpu-inventory";
-import { MetricCard } from "@/components/common/MetricCard";
-import { useGpuOccupancyQuery } from "../useGpuOccupancyQuery";
 
 function CapacityMetric({
-  loading,
+  loading = false,
   title,
   value,
+  unit,
   extra,
+  icon,
 }: {
-  loading: boolean;
+  loading?: boolean;
   title: string;
   value: string | number;
+  unit?: ReactNode;
   extra: string;
+  icon: ReactNode;
 }) {
-  return loading ? (
-    <Card className="h-full">
-      <Skeleton animation text={{ rows: 2 }} />
+  return (
+    <Card className="h-full min-w-0 rounded-lg!" bodyStyle={{ padding: 24 }}>
+      {loading ? (
+        <Skeleton animation text={{ rows: 3 }} />
+      ) : (
+        <div className="flex min-h-36 items-center gap-5">
+          <span
+            aria-hidden="true"
+            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-app-fill text-2xl text-app-text-secondary"
+          >
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <Statistic
+              title={title}
+              value={value}
+              suffix={unit}
+              styleValue={{ fontSize: 36, fontWeight: 600, lineHeight: 1.3 }}
+            />
+            <Typography.Text type="secondary" className="mt-1 block">
+              {extra}
+            </Typography.Text>
+          </div>
+        </div>
+      )}
     </Card>
-  ) : (
-    <MetricCard title={title} value={value} extra={extra} />
   );
 }
 
 export function GpuCapacityMetrics() {
-  const occupancy = useGpuOccupancyQuery();
   const tenantQuota = useQuery({
     meta: {
       errorNotification: {
@@ -37,48 +60,29 @@ export function GpuCapacityMetrics() {
     queryKey: ["quotas", "me"],
     queryFn: getMyQuota,
   });
-  const total = occupancy.data?.total ?? 0;
-  const inUse = occupancy.data?.in_use ?? 0;
-  const available = occupancy.data?.available ?? 0;
-  const fault = occupancy.data?.fault ?? 0;
-  const maintenance = Math.max(0, total - inUse - available - fault);
-  const unavailable = fault + maintenance;
   const gpuQuota = tenantQuota.data?.items.find((item) => item.resource_type === "gpu_count");
 
   return (
-    <Grid.Row gutter={[16, 16]}>
-      <Grid.Col xs={12} md={6}>
-        <CapacityMetric
-          loading={tenantQuota.isLoading}
-          title="配额卡数"
-          value={gpuQuota ? gpuQuota.used + "/" + gpuQuota.total : "-"}
-          extra="已用 / 上限"
-        />
-      </Grid.Col>
-      <Grid.Col xs={12} md={6}>
-        <CapacityMetric
-          loading={tenantQuota.isLoading}
-          title="本租户预留"
-          value={gpuQuota?.reserved ?? "-"}
-          extra="BOSS 已分配未创建"
-        />
-      </Grid.Col>
-      <Grid.Col xs={12} md={6}>
-        <CapacityMetric
-          loading={occupancy.isLoading}
-          title="平台空闲"
-          value={available}
-          extra="共享池可抢"
-        />
-      </Grid.Col>
-      <Grid.Col xs={12} md={6}>
-        <CapacityMetric
-          loading={occupancy.isLoading}
-          title="异常卡"
-          value={unavailable}
-          extra="维护 + 不可用"
-        />
-      </Grid.Col>
-    </Grid.Row>
+    <>
+      <CapacityMetric
+        loading={tenantQuota.isLoading}
+        title="配额卡数"
+        value={gpuQuota?.used ?? "-"}
+        unit={
+          <span className="text-base font-normal text-app-text-tertiary">
+            / {gpuQuota?.total ?? "-"}
+          </span>
+        }
+        extra="已用 / 上限"
+        icon={<IconApps />}
+      />
+      <CapacityMetric
+        loading={tenantQuota.isLoading}
+        title="本租户预留"
+        value={gpuQuota?.reserved ?? "-"}
+        extra="平台已分配、尚未创建实例"
+        icon={<IconUser />}
+      />
+    </>
   );
 }

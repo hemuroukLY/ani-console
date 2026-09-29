@@ -26,14 +26,21 @@ export function GpuAnomalyList() {
   return (
     <Card
       title="异常"
-      className="h-full"
+      className="h-full rounded-lg!"
       extra={<Typography.Text type="secondary">{anomalies.length} 项</Typography.Text>}
     >
       {anomalyQuery.isLoading ? (
         <Skeleton animation text={{ rows: 4 }} />
       ) : anomalies.length === 0 ? (
-        <div className="flex h-52 items-center justify-center">
-          <Empty description="当前无 GPU 异常" />
+        <div className="flex min-h-28 items-center justify-center">
+          <Empty
+            description={
+              <div className="space-y-1">
+                <div>当前无 GPU 异常</div>
+                <Typography.Text type="secondary">故障或维护中的卡会在这里列出</Typography.Text>
+              </div>
+            }
+          />
         </div>
       ) : (
         <Space direction="vertical" size={10} className="w-full">
