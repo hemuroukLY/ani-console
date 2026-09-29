@@ -1,6 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, Select, Space, Typography } from "@arco-design/web-react";
+import { Button, Modal, Select, Space } from "@arco-design/web-react";
 import { useState } from "react";
 
 import {
@@ -12,7 +12,7 @@ import {
   type RegistryScanResult,
 } from "@/api/registry";
 import { RegistryPushInstructionsModal } from "../RegistryPushInstructionsModal";
-import { ListPageFrame, type ListColumn, ListDataTable } from "@/components/common";
+import { ListPageFrame, type ListColumn, ListDataTable, ResourceNameId } from "@/components/common";
 import { copyToClipboard } from "@/lib/clipboard";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
@@ -102,39 +102,51 @@ export function RegistryPage() {
       key: "image",
       title: "镜像名",
       ellipsis: true,
+      width: 200,
       render: (_, item) => (
-        <div>
-          <span className="block font-medium">{getImageDisplayName(item)}</span>
-          <Typography.Text type="secondary" className="text-xs">
-            {item.repository}
-          </Typography.Text>
-        </div>
+        <ResourceNameId name={getImageDisplayName(item)} id={item.repository} copyable={false} />
       ),
     },
     {
       key: "purpose",
       title: "用途",
+      width: 120,
+      ellipsis: true,
       render: (_, item) => (item.purpose ? PURPOSE_LABELS[item.purpose] : "-"),
     },
     {
       key: "project",
       title: "项目",
+      width: 200,
+      ellipsis: true,
       dataIndex: "project",
     },
-    { key: "tag", title: "Tag", dataIndex: "tag" },
+    {
+      key: "tag",
+      title: "Tag",
+      width: 120,
+      ellipsis: true,
+      dataIndex: "tag",
+    },
     {
       key: "size",
       title: "大小",
+      width: 120,
+      ellipsis: true,
       render: (_, item) => formatBytes(item.size_bytes),
     },
     {
       key: "pushedAt",
       title: "推送时间",
+      width: 160,
+      ellipsis: true,
       render: (_, item) => formatDateTime(item.pushed_at),
     },
     {
       key: "scan",
       title: "漏洞摘要",
+      width: 120,
+      ellipsis: true,
       render: (_, item) => scanSummary(item.scan_status),
     },
   ];

@@ -12,10 +12,12 @@ export function KnowledgeModelSelect({
   capability,
   value,
   onChange,
+  required = false,
 }: {
   capability: NonNullable<InferenceServiceListParams["capability"]>;
   value?: string;
   onChange?: (value: string | undefined) => void;
+  required?: boolean;
 }) {
   const models = useQuery({
     queryKey: ["inference-services", "model-options", capability, "running"],
@@ -57,8 +59,8 @@ export function KnowledgeModelSelect({
           if (visible) void models.refetch({ cancelRefetch: false });
         }}
         loading={models.isFetching}
-        allowClear
-        placeholder="使用服务端默认模型"
+        allowClear={!required}
+        placeholder={required ? "请选择向量化模型" : "使用服务端默认模型"}
         showSearch
         options={options}
         filterOption={(input, option) =>
@@ -67,9 +69,7 @@ export function KnowledgeModelSelect({
       />
       {models.isSuccess && options.length === 0 ? (
         <Typography.Text type="secondary">
-          当前租户没有可选择的运行中的{capability === "embedding" ? "向量化" : "文本生成"}推理服务。
-          可使用服务端默认模型创建；如需指定模型，请在推理服务页面部署对应服务，
-          待服务运行后重新展开选择框。
+          {required ? "暂无可用模型，请先部署向量化服务。" : "暂无可选模型，将使用服务端默认模型。"}
         </Typography.Text>
       ) : null}
     </Space>

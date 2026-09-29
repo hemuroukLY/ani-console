@@ -4,7 +4,6 @@ import {
   streamKnowledgeBaseQuery,
   type KBQueryResponse as Answer,
   type KBSessionMessage as SessionMessage,
-  type KBSourceChunk as Source,
 } from "@/api/knowledge";
 import { parseDateTime } from "@/lib/date";
 
@@ -21,30 +20,14 @@ function getLatestQuestion(messages: readonly ThreadMessage[]) {
   );
 }
 
-function formatSources(sources?: readonly Source[] | null) {
-  if (!sources?.length) return "";
-  return `\n\n参考来源\n${sources
-    .map((source, index) => {
-      const title = source.file_name || source.doc_id || `来源 ${index + 1}`;
-      const page = source.page ? ` · 第 ${source.page} 页` : "";
-      const score = source.score == null ? "" : ` · 匹配度 ${source.score.toFixed(3)}`;
-      return `[${index + 1}] ${title}${page}${score}\n${source.content || "-"}`;
-    })
-    .join("\n\n")}`;
-}
-
-function formatAnswer(answer: Answer) {
-  return `${answer.answer}${formatSources(answer.sources)}`;
-}
-
 export function toThreadMessage(message: SessionMessage): ThreadMessageLike {
   return {
     id: message.id,
     role: message.role,
-    content:
-      message.role === "assistant"
-        ? `${message.content}${formatSources(message.sources)}`
-        : message.content,
+    content: message.content,
+    metadata: {
+      custom: { sources: message.role === "assistant" ? (message.sources ?? []) : [] },
+    },
     createdAt: parseDateTime(message.created_at),
   };
 }
@@ -114,7 +97,10 @@ export function createKnowledgeBaseAdapter(
                   typeof payload.message === "string" ? payload.message : "流式问答失败",
                 );
               }
-              yield { content: [{ type: "text", text: `${text}${formatSources(sources)}` }] };
+              yield {
+                content: [{ type: "text", text }],
+                metadata: { custom: { sources } },
+              };
             }
             if (done) break;
           }
@@ -134,7 +120,10 @@ export function createKnowledgeBaseAdapter(
       const data = await queryKnowledgeBase(kbId, submitData);
       sessionIdRef.current = data.session_id;
       onComplete(data.session_id);
-      yield { content: [{ type: "text", text: formatAnswer(data) }] };
+      yield {
+        content: [{ type: "text", text: data.answer }],
+        metadata: { custom: { sources: data.sources } },
+      };
     },
   };
 }

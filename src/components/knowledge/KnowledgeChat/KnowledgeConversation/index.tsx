@@ -14,6 +14,7 @@ import { Button, InputNumber, Select, Spin, Typography } from "@arco-design/web-
 import { IconCheck, IconCopy, IconSend, IconStop } from "@arco-design/web-react/icon";
 import { useMemo, useRef } from "react";
 import { KnowledgeMarkdownText } from "../../KnowledgeMarkdownText";
+import { KnowledgeSources } from "../KnowledgeSources";
 import { createKnowledgeBaseAdapter, type QueryMode } from "../knowledgeQueryAdapter";
 import styles from "./index.module.css";
 
@@ -257,6 +258,7 @@ function AssistantMessage() {
             <ErrorPrimitive.Message />
           </ErrorPrimitive.Root>
         </MessagePrimitive.Error>
+        <KnowledgeSources />
       </div>
       <ActionBarPrimitive.Root
         hideWhenRunning

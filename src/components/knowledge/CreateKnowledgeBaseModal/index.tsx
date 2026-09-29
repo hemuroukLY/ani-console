@@ -11,7 +11,7 @@ import { KnowledgeModelSelect } from "@/components/knowledge/KnowledgeModelSelec
 import { validateForm } from "@/lib/form";
 
 type CreateKnowledgeBaseFormValues = CreateKnowledgeBaseInput & {
-  embedding_model?: string;
+  embedding_model: string;
   chunk_size: number;
   top_k: number;
 };
@@ -34,18 +34,10 @@ export function CreateKnowledgeBaseModal({
         errorFallback: "创建知识库失败",
       },
     },
-    mutationFn: async (values: {
-      name: string;
-      description?: string;
-      embedding_model?: string;
-      default_inference_service?: string;
-      chunk_size: number;
-      top_k: number;
-    }) => {
+    mutationFn: async (values: CreateKnowledgeBaseFormValues) => {
       const submitData = {
         ...values,
         name: values.name.trim(),
-        embedding_model: values.embedding_model || undefined,
         description: values.description?.trim() || undefined,
         default_inference_service: values.default_inference_service || undefined,
       };
@@ -99,8 +91,20 @@ export function CreateKnowledgeBaseModal({
         <Form.Item label="描述" field="description">
           <Input.TextArea placeholder="说明知识库的内容和用途" maxLength={500} showWordLimit />
         </Form.Item>
-        <Form.Item label="向量化模型" field="embedding_model" extra={modelExtra}>
-          <KnowledgeModelSelect capability="embedding" />
+        <Form.Item
+          label="向量化模型"
+          field="embedding_model"
+          rules={[{ required: true, message: "请选择向量化模型" }]}
+          extra={
+            <>
+              用于文档向量化和检索。
+              <Link to="/inference" target="_blank" rel="noopener noreferrer">
+                管理模型
+              </Link>
+            </>
+          }
+        >
+          <KnowledgeModelSelect capability="embedding" required />
         </Form.Item>
         <Form.Item label="推理模型" field="default_inference_service" extra={modelExtra}>
           <KnowledgeModelSelect capability="text-generation" />
