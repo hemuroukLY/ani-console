@@ -1,7 +1,7 @@
-import type { ContainerRolloutStatus, InstanceRecord } from "@/api/instances";
+import type { FilterableInstanceState, InstanceRecord } from "@/api/instances";
 export type ContainerInstanceRecord = InstanceRecord;
 export type ContainerInstanceStatus = ContainerInstanceRecord["state"];
-export type ContainerInstanceStatusFilter = "all" | ContainerRolloutStatus;
+export type ContainerInstanceStatusFilter = "all" | FilterableInstanceState;
 export type ContainerInstanceSearchField = "name" | "id";
 
 export type ContainerInstance = {

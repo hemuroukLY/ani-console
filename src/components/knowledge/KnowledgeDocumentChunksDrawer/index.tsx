@@ -1,4 +1,5 @@
 import { withId } from "@/lib/id";
+import { StatusBadge } from "@/components/common";
 import { Collapse, Drawer, Empty, Spin, Tag, Typography } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
 import { listKnowledgeBaseDocumentChunks, type KBChunk, type KBDocument } from "@/api/knowledge";
@@ -98,7 +99,11 @@ function ParentChunkSection({ group, index }: { group: ParentChunkGroup; index: 
             {numberFormatter.format(content?.length ?? 0)} 字符 · {childCount} 个子分段
           </Typography.Text>
         </div>
-        {group.parent ? <ChunkMeta chunk={group.parent} /> : <Tag color="orange">父分段缺失</Tag>}
+        {group.parent ? (
+          <ChunkMeta chunk={group.parent} />
+        ) : (
+          <StatusBadge tone="warning">父分段缺失</StatusBadge>
+        )}
       </div>
       {content ? (
         <Typography.Paragraph className={styles.parentContent}>{content}</Typography.Paragraph>

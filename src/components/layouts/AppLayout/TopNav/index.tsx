@@ -1,9 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Dropdown, Input, Modal } from "@arco-design/web-react";
+import { Button, Dropdown, Input, Menu, Modal } from "@arco-design/web-react";
 import {
   IconApps,
   IconCalendar,
+  IconCheck,
   IconDown,
   IconExport,
   IconHome,
@@ -22,6 +23,8 @@ import { formatDateTime } from "@/lib/format";
 import { useAuthStore } from "@/stores/auth";
 import { useBrandingStore } from "@/stores/branding";
 
+const MOCK_REGION = { value: "guangzhou-a", label: "广州-A" };
+
 interface TopNavProps {
   activeKey: string;
   productPanelVisible: boolean;
@@ -35,6 +38,7 @@ export function TopNav({
 }: TopNavProps) {
   const navigate = useNavigate();
   const [userMenuVisible, setUserMenuVisible] = useState(false);
+  const [regionMenuVisible, setRegionMenuVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
   const branding = useBrandingStore((s) => s.branding);
   const name = branding?.platform_name ?? "常青云平台";
@@ -164,11 +168,42 @@ export function TopNav({
               <IconApps />
               <span>产品与服务</span>
             </button>
-            <div className="topnav-region" aria-label="当前区域：广州-A">
-              <IconLocation />
-              <span>广州-A</span>
-              <IconDown className="topnav-region-arrow" />
-            </div>
+            <Dropdown
+              trigger="click"
+              position="bl"
+              popupVisible={regionMenuVisible}
+              onVisibleChange={setRegionMenuVisible}
+              droplist={
+                <Menu
+                  aria-label="选择区域"
+                  selectedKeys={[MOCK_REGION.value]}
+                  onClickMenuItem={() => setRegionMenuVisible(false)}
+                >
+                  <Menu.Item key={MOCK_REGION.value}>
+                    <span className="flex min-w-28 items-center justify-between gap-4">
+                      <span>{MOCK_REGION.label}</span>
+                      <IconCheck aria-hidden="true" />
+                    </span>
+                  </Menu.Item>
+                </Menu>
+              }
+            >
+              <Button
+                type="text"
+                className="topnav-primary-item topnav-region"
+                style={{ cursor: "pointer" }}
+                aria-label={`选择区域，当前区域：${MOCK_REGION.label}`}
+                aria-haspopup="menu"
+                aria-expanded={regionMenuVisible}
+              >
+                <IconLocation />
+                <span>{MOCK_REGION.label}</span>
+                <IconDown
+                  className="topnav-region-arrow"
+                  style={{ transform: regionMenuVisible ? "rotate(180deg)" : undefined }}
+                />
+              </Button>
+            </Dropdown>
           </nav>
         </div>
         <div className="topnav-right">

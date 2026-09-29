@@ -4,7 +4,7 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
@@ -63,7 +63,7 @@ export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
       ]}
       icon={<AliIcon name="jiqun" size={28} />}
       title={cluster.name ?? clusterId}
-      status={<StatusTag status={cluster.state} />}
+      status={<StatusBadge status={cluster.state} />}
       headerItems={[
         { label: "区域", value: "-" },
         { label: "K8s 版本", value: cluster.version ?? "-" },
@@ -90,7 +90,6 @@ export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={cluster.id ?? clusterId} /> },
-            { label: "状态", value: <StatusTag status={cluster.state} /> },
             { label: "区域", value: "-" },
             { label: "K8s 版本", value: cluster.version ?? "-" },
             { label: "节点数", value: nodeCount },

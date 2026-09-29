@@ -1,5 +1,5 @@
 import { listK8sClusterNodePools, type K8sClusterNodePool } from "@/api/k8s-clusters";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { withId } from "@/lib/id";
 import { Empty } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
@@ -38,7 +38,7 @@ export function K8sNodePools({
         {
           title: "状态",
           width: 120,
-          render: (_, row) => <StatusTag status={row.state} />,
+          render: (_, row) => <StatusBadge status={row.state} />,
         },
       ]}
       data={items}

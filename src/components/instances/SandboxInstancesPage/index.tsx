@@ -1,9 +1,9 @@
-import { listInstances, type InstanceRecord, type SandboxSessionState } from "@/api/instances";
+import { listInstances, type InstanceRecord, type FilterableInstanceState } from "@/api/instances";
 import { useEffect, useState } from "react";
 import {
   ResourceNameId,
   ListPageFrame,
-  StatusTag,
+  StatusBadge,
   type ListColumn,
   ListDataTable,
 } from "@/components/common";
@@ -14,12 +14,8 @@ import { SandboxInstanceCreateModal } from "@/components/instances/SandboxInstan
 import { useSandboxInstanceRowActions } from "./SandboxInstanceRowActions";
 
 type SandboxInstance = InstanceRecord;
-type SandboxStatus = "all" | SandboxSessionState;
+type SandboxStatus = "all" | FilterableInstanceState;
 type SearchField = "name" | "id";
-
-function sessionStatus(instance: SandboxInstance) {
-  return instance.sandbox?.session_state ?? instance.state;
-}
 
 export function SandboxInstancesPage() {
   const [status, setStatus] = useState<SandboxStatus>("all");
@@ -40,7 +36,7 @@ export function SandboxInstancesPage() {
         const keyword = searchText.trim();
         return listInstances({
           kind: "sandbox",
-          session_state: status === "all" ? undefined : status,
+          state: status === "all" ? undefined : status,
           search_field: keyword ? searchField : undefined,
           keyword: keyword || undefined,
           cursor,
@@ -56,10 +52,12 @@ export function SandboxInstancesPage() {
   const statusTabs = [
     { value: "all" as const, label: "全部" },
     { value: "pending" as const, label: "等待中" },
+    { value: "provisioning" as const, label: "配置中" },
+    { value: "starting" as const, label: "启动中" },
     { value: "running" as const, label: "运行中" },
-    { value: "paused" as const, label: "已暂停" },
-    { value: "expired" as const, label: "已过期" },
+    { value: "stopping" as const, label: "停止中" },
     { value: "stopped" as const, label: "已停止" },
+    { value: "failed" as const, label: "异常" },
   ];
 
   const columns: Array<ListColumn<SandboxInstance>> = [
@@ -74,7 +72,9 @@ export function SandboxInstancesPage() {
       key: "state",
       title: "状态",
       width: 120,
-      render: (_, item) => <StatusTag status={sessionStatus(item)} />,
+      render: (_, item) => (
+        <StatusBadge status={item.state} reason={item.reason ?? item.sandbox?.stop_reason} />
+      ),
     },
     {
       key: "template",
@@ -103,6 +103,12 @@ export function SandboxInstancesPage() {
       width: 130,
       dataIndex: "sandbox.network_egress_policy",
       placeholder: "-",
+    },
+    {
+      key: "protection",
+      title: "终止保护",
+      width: 100,
+      render: (_, item) => (item.termination_protection ? "已开启" : "未开启"),
     },
     {
       key: "created",

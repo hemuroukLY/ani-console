@@ -1,8 +1,8 @@
 import { withId } from "@/lib/id";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Button, Empty, Tag } from "@arco-design/web-react";
+import { Button, Empty } from "@arco-design/web-react";
 import { listKnowledgeBaseAuditLogs, type KBAuditLog } from "@/api/knowledge";
-import { DataTable } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 
 const PAGE_SIZE = 20;
@@ -83,8 +83,11 @@ export function KnowledgeBaseAuditLogs({ kbId }: { kbId: string }) {
           {
             title: "结果",
             width: 100,
-            render: (_, log) =>
-              log.error_code ? <Tag color="red">失败</Tag> : <Tag color="green">成功</Tag>,
+            render: (_, log) => (
+              <StatusBadge status={log.error_code ? "failed" : "succeeded"}>
+                {log.error_code ? "失败" : "成功"}
+              </StatusBadge>
+            ),
           },
         ]}
       />

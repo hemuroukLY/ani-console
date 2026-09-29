@@ -1,6 +1,7 @@
+import { StatusBadge } from "@/components/common";
 import type { InstanceRecord } from "@/api/instances";
 import { copyToClipboard } from "@/lib/clipboard";
-import { Button, Descriptions, Space, Tag, Typography } from "@arco-design/web-react";
+import { Button, Descriptions, Space, Typography } from "@arco-design/web-react";
 
 type VmInstance = InstanceRecord;
 
@@ -25,7 +26,11 @@ export function VmInstanceSshAccess({
         data={[
           {
             label: "连接状态",
-            value: available ? <Tag color="green">可连接</Tag> : <Tag color="orange">未就绪</Tag>,
+            value: (
+              <StatusBadge tone={available ? "success" : "warning"}>
+                {available ? "可连接" : "未就绪"}
+              </StatusBadge>
+            ),
           },
           { label: "用户名", value: ssh?.username ?? "-" },
           {

@@ -43,7 +43,7 @@ export const homeSummaryPlaceholders: HomeSummaryCard[] = [
     label: "实例总数",
     value: 0,
     icon: "yunzhuji",
-    route: "/overview-compute",
+    route: "/vm-instances",
     statuses: [
       { label: "运行中", value: 0, tone: "success" },
       { label: "异常", value: 0, tone: "danger" },
@@ -107,12 +107,12 @@ export const homeQuickCreateItems: HomeShortcut[] = [
     icon: "Sandbox",
     route: "/sandbox-instances",
   },
-  {
-    id: "create-k8s",
-    name: "创建 K8s 集群",
-    icon: "jiqun",
-    route: "/k8s-clusters",
-  },
+  // {
+  //   id: "create-k8s",
+  //   name: "创建 K8s 集群",
+  //   icon: "jiqun",
+  //   route: "/k8s-clusters",
+  // },
 ];
 
 export const homeTrendConfigs: Record<HomeResourceTrendMetric, HomeTrendConfig> = {
@@ -162,7 +162,7 @@ function toHomeSummaries(overview: ConsoleOverviewStatistics): HomeSummaryCard[]
       label: "实例总数",
       value: overview.instances.total,
       icon: "yunzhuji",
-      route: "/overview-compute",
+      route: "/vm-instances",
       statuses: [
         { label: "运行中", value: instanceRunning, tone: "success" },
         { label: "异常", value: instanceFailed, tone: "danger" },

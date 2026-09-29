@@ -1,4 +1,5 @@
-import { Card, Empty, Skeleton, Space, Tag, Typography } from "@arco-design/web-react";
+import { StatusBadge } from "@/components/common";
+import { Card, Empty, Skeleton, Space, Typography } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
 import { listGpuAnomalies, type GpuInventoryRecord } from "@/api/gpu-inventory";
 
@@ -42,9 +43,12 @@ export function GpuAnomalyList() {
               className="flex flex-wrap items-center justify-between gap-3 rounded bg-fill-2 px-4 py-3"
             >
               <Space size={8}>
-                <Tag color={item.status === "fault" ? "red" : "orange"}>
+                <StatusBadge
+                  status={item.status}
+                  tone={item.status === "fault" ? "danger" : "warning"}
+                >
                   {statusLabel[item.status]}
-                </Tag>
+                </StatusBadge>
                 <Typography.Text>{item.gpu_type}</Typography.Text>
               </Space>
               <Typography.Text type="secondary">{item.node_name}</Typography.Text>

@@ -4,7 +4,7 @@ import {
   ListPageFrame,
   ResourceNameId,
   type ListColumn,
-  StatusTag,
+  StatusBadge,
   ListDataTable,
 } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
@@ -89,7 +89,7 @@ export function ContainerInstancesPage({
       key: "status",
       title: COLUMN_LABELS.status,
       width: 120,
-      render: (_, row) => <StatusTag status={row.status} />,
+      render: (_, row) => <StatusBadge status={row.status} reason={row.record.reason} />,
     },
     {
       key: "image",
@@ -114,7 +114,7 @@ export function ContainerInstancesPage({
       key: "rolloutStatus",
       title: COLUMN_LABELS.rolloutStatus,
       width: 120,
-      render: (_, row) => <StatusTag status={row.rolloutStatus} />,
+      render: (_, row) => <StatusBadge status={row.rolloutStatus} />,
     },
     {
       key: "node",
@@ -131,6 +131,12 @@ export function ContainerInstancesPage({
       width: 120,
     },
     {
+      key: "protection",
+      title: "终止保护",
+      width: 100,
+      render: (_, row) => (row.record.termination_protection ? "已开启" : "未开启"),
+    },
+    {
       key: "createdAt",
       title: COLUMN_LABELS.createdAt,
       width: 150,
@@ -140,12 +146,13 @@ export function ContainerInstancesPage({
 
   const statusTabs = [
     { value: "all" as const, label: "全部" },
-    { value: "pending" as const, label: "待发布" },
-    { value: "progressing" as const, label: "发布中" },
-    { value: "healthy" as const, label: "健康" },
-    { value: "degraded" as const, label: "异常" },
-    { value: "rolled_back" as const, label: "已回滚" },
+    { value: "pending" as const, label: "等待中" },
+    { value: "provisioning" as const, label: "配置中" },
+    { value: "starting" as const, label: "启动中" },
+    { value: "running" as const, label: "运行中" },
+    { value: "stopping" as const, label: "停止中" },
     { value: "stopped" as const, label: "已停止" },
+    { value: "failed" as const, label: "异常" },
   ];
   return (
     <>

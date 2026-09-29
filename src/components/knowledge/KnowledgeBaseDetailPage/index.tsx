@@ -11,7 +11,7 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { KnowledgeChat } from "@/components/knowledge/KnowledgeChat";
 import { KnowledgeDocuments } from "@/components/knowledge/KnowledgeDocuments";
@@ -83,12 +83,9 @@ export function KnowledgeBaseDetailPage({
     <DetailPageFrame
       breadcrumbs={[...navigationBreadcrumbsForPath("/kb"), { label: kb.name }]}
       title={kb.name}
-      status={<StatusTag status={kb.status} />}
+      status={<StatusBadge status={kb.status} />}
       icon={<AliIcon name="zhishiku" size={28} />}
-      headerItems={[
-        { label: "文档数", value: String(kb.doc_count ?? 0) },
-        { label: "创建时间", value: formatDateTime(kb.created_at) },
-      ]}
+      headerItems={[{ label: "文档数", value: String(kb.doc_count ?? 0) }]}
       actions={
         <Dropdown
           trigger="click"
@@ -124,8 +121,6 @@ export function KnowledgeBaseDetailPage({
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={kb.id} /> },
-            { label: "名称", value: kb.name },
-            { label: "状态", value: <StatusTag status={kb.status} /> },
             { label: "描述", value: kb.description || "-" },
             { label: "向量化模型", value: kb.embedding_model || "-" },
             {

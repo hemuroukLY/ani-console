@@ -10,7 +10,7 @@ import {
   type K8sCluster,
 } from "@/api/k8s-clusters";
 import {
-  StatusTag,
+  StatusBadge,
   ResourceNameId,
   ListPageFrame,
   type ListColumn,
@@ -150,7 +150,7 @@ function ClusterList() {
       key: "status",
       title: "状态",
       width: 120,
-      render: (_, cluster) => <StatusTag status={cluster.state} />,
+      render: (_, cluster) => <StatusBadge status={cluster.state} />,
     },
     {
       key: "version",

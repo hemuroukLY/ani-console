@@ -10,7 +10,7 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { withId } from "@/lib/id";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
@@ -98,12 +98,9 @@ export function SubnetDetailPage({ subnetId }: { subnetId: string }) {
     <DetailPageFrame
       breadcrumbs={[...navigationBreadcrumbsForPath("/subnets"), { label: subnet.name }]}
       title={subnet.name}
-      status={<StatusTag status={subnet.state} />}
+      status={<StatusBadge status={subnet.state} />}
       icon={<AliIcon name="VPCwangluo" size={28} />}
-      headerItems={[
-        { label: "CIDR", value: subnet.cidr },
-        { label: "创建时间", value: formatDateTime(subnet.created_at) },
-      ]}
+      headerItems={[{ label: "CIDR", value: subnet.cidr }]}
       actions={
         <Dropdown trigger="click" position="br" droplist={moreMenu}>
           <Button disabled={deleteSubnet.isPending} aria-label="更多操作" title="更多操作">
@@ -117,14 +114,12 @@ export function SubnetDetailPage({ subnetId }: { subnetId: string }) {
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={subnet.id} /> },
-            { label: "名称", value: subnet.name },
             {
               label: "VPC",
               value: parentVpc?.name ?? (vpc.isLoading ? "加载中…" : subnet.vpc_id),
             },
             { label: "CIDR", value: subnet.cidr },
             { label: "网关", value: subnet.gateway ?? "-" },
-            { label: "状态", value: <StatusTag status={subnet.state} /> },
             { label: "创建时间", value: formatDateTime(subnet.created_at) },
             { label: "更新时间", value: formatDateTime(subnet.updated_at) },
           ],

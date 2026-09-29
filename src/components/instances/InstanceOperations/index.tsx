@@ -1,7 +1,7 @@
 import { withId } from "@/lib/id";
 import { listInstanceOperations, type InstanceOperation } from "@/api/instances";
 import { Empty } from "@arco-design/web-react";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
 
@@ -69,7 +69,13 @@ export function InstanceOperations({ instanceId }: { instanceId: string }) {
         {
           title: "状态",
           width: 120,
-          render: (_, operation) => <StatusTag status={operation.status} />,
+          render: (_, operation) => (
+            <StatusBadge
+              status={operation.status}
+              reason={operation.failure_reason}
+              message={operation.failure_message}
+            />
+          ),
         },
       ]}
     />

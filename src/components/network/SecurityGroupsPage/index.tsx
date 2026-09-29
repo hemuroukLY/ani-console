@@ -17,7 +17,7 @@ import {
   ListPageFrame,
   type ListColumn,
   ListDataTable,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
@@ -140,7 +140,7 @@ export function SecurityGroupsPage() {
       key: "state",
       title: "状态",
       width: 100,
-      render: (_, item) => <StatusTag status={item.state} />,
+      render: (_, item) => <StatusBadge status={item.state} />,
     },
     {
       key: "rules",

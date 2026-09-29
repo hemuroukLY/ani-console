@@ -215,7 +215,6 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
             label: "已就绪副本",
             value: `${item.ready_replicas} / ${item.replicas}`,
           },
-          { label: "创建时间", value: formatDateTime(item.created_at) },
         ]}
         actions={actions}
         cards={[
@@ -224,7 +223,6 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
             title: "基本信息",
             fields: [
               { label: "ID", value: <ResourceId value={item.id} /> },
-              { label: "状态", value: serviceStatus },
               { label: "规格", value: "-" },
               {
                 label: "模型",

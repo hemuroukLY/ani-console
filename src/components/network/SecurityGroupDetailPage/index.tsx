@@ -4,7 +4,7 @@ import {
   DetailPagePlaceholder,
   AliIcon,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -80,16 +80,12 @@ export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: 
           { label: securityGroup.name },
         ]}
         title={securityGroup.name}
-        status={<StatusTag status={securityGroup.state} />}
+        status={<StatusBadge status={securityGroup.state} />}
         icon={<AliIcon name="anquanzu" size={28} />}
         headerItems={[
           {
             label: "VPC",
             value: parentVpc?.name ?? securityGroup.vpc_id ?? "-",
-          },
-          {
-            label: "创建时间",
-            value: formatDateTime(securityGroup.created_at),
           },
         ]}
         actions={
@@ -127,16 +123,11 @@ export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: 
             title: "基本信息",
             fields: [
               { label: "ID", value: <ResourceId value={securityGroup.id} /> },
-              { label: "名称", value: securityGroup.name },
               {
                 label: "VPC",
                 value: parentVpc?.name ?? securityGroup.vpc_id ?? "-",
               },
               { label: "描述", value: securityGroup.description || "-" },
-              {
-                label: "状态",
-                value: <StatusTag status={securityGroup.state} />,
-              },
               {
                 label: "创建时间",
                 value: formatDateTime(securityGroup.created_at),

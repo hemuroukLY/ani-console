@@ -1,5 +1,5 @@
 import { withId } from "@/lib/id";
-import { Empty, Modal, Space, Tag, Tooltip } from "@arco-design/web-react";
+import { Empty, Modal, Space, Tag } from "@arco-design/web-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
@@ -9,7 +9,7 @@ import {
   reparseKnowledgeBaseDocument,
   type KBDocument,
 } from "@/api/knowledge";
-import { DataTable, ResourceNameId, type ListColumn } from "@/components/common";
+import { DataTable, ResourceNameId, StatusBadge, type ListColumn } from "@/components/common";
 import { KnowledgeDocumentChunksDrawer } from "@/components/knowledge/KnowledgeDocumentChunksDrawer";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
@@ -41,15 +41,11 @@ function metadataEntries(value: KBDocument["custom_metadata"]) {
 }
 
 function statusTag(document: KBDocument) {
-  const tag = (
-    <Tag
-      color={
-        document.parse_status === "ready"
-          ? "green"
-          : document.parse_status === "failed"
-            ? "red"
-            : "blue"
-      }
+  return (
+    <StatusBadge
+      status={document.parse_status}
+      message={document.error_message}
+      loading={document.parse_status === "parsing" || document.parse_status === "indexing"}
     >
       {
         (
@@ -62,9 +58,8 @@ function statusTag(document: KBDocument) {
           } as const
         )[document.parse_status]
       }
-    </Tag>
+    </StatusBadge>
   );
-  return document.error_message ? <Tooltip content={document.error_message}>{tag}</Tooltip> : tag;
 }
 
 export function KnowledgeDocuments({ kbId, action }: { kbId: string; action?: ReactNode }) {

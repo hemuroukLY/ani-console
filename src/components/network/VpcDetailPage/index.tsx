@@ -4,7 +4,7 @@ import {
   DetailPagePlaceholder,
   AliIcon,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -79,12 +79,9 @@ export function VpcDetailPage({ vpcId }: { vpcId: string }) {
     <DetailPageFrame
       breadcrumbs={[...navigationBreadcrumbsForPath("/vpcs"), { label: vpc.name }]}
       title={vpc.name}
-      status={<StatusTag status={vpc.state} />}
+      status={<StatusBadge status={vpc.state} />}
       icon={<AliIcon name="VPCwangluo" size={28} />}
-      headerItems={[
-        { label: "CIDR", value: vpc.cidr },
-        { label: "创建时间", value: formatDateTime(vpc.created_at) },
-      ]}
+      headerItems={[{ label: "CIDR", value: vpc.cidr }]}
       actions={
         <Dropdown trigger="click" position="br" droplist={moreMenu}>
           <Button disabled={deleteVpc.isPending} aria-label="更多操作" title="更多操作">
@@ -98,9 +95,7 @@ export function VpcDetailPage({ vpcId }: { vpcId: string }) {
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={vpc.id} /> },
-            { label: "名称", value: vpc.name },
             { label: "CIDR", value: vpc.cidr },
-            { label: "状态", value: <StatusTag status={vpc.state} /> },
             { label: "创建时间", value: formatDateTime(vpc.created_at) },
             { label: "更新时间", value: formatDateTime(vpc.updated_at) },
           ],

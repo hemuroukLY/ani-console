@@ -4,7 +4,7 @@ import {
   DetailPagePlaceholder,
   AliIcon,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -115,12 +115,9 @@ export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: str
     <DetailPageFrame
       breadcrumbs={[...navigationBreadcrumbsForPath("/load-balancers"), { label: item.name }]}
       title={item.name}
-      status={<StatusTag status={item.state} />}
+      status={<StatusBadge status={item.state} />}
       icon={<AliIcon name="fuzaijunhengqi" size={28} />}
-      headerItems={[
-        { label: "VIP", value: item.vip || "-" },
-        { label: "创建时间", value: formatDateTime(item.created_at) },
-      ]}
+      headerItems={[{ label: "VIP", value: item.vip || "-" }]}
       actions={
         <Dropdown
           trigger="click"
@@ -156,8 +153,6 @@ export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: str
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={item.id} /> },
-            { label: "名称", value: item.name },
-            { label: "状态", value: <StatusTag status={item.state} /> },
             { label: "VIP", value: item.vip || "-" },
             {
               label: "类型",

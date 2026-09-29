@@ -1,6 +1,6 @@
 import { withId } from "@/lib/id";
 import { getInstance, type InstanceRecord } from "@/api/instances";
-import { Empty, Space, Tag, Tooltip } from "@arco-design/web-react";
+import { Empty, Space, Tooltip } from "@arco-design/web-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -9,7 +9,7 @@ import {
   DetailPagePlaceholder,
   ImageNameText,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { InstanceLogs } from "@/components/instances/InstanceLogs";
 import { InstanceVersions } from "@/components/instances/InstanceVersions";
@@ -183,22 +183,9 @@ export function GpuInstanceDetailPage({
     <DetailPageFrame
       breadcrumbs={[...navigationBreadcrumbsForPath("/gpu-instances"), { label: instance.name }]}
       title={instance.name}
-      status={
-        instance.reason ? (
-          <Tooltip content={instance.reason}>
-            <span className="inline-flex">
-              <StatusTag status={instance.state} />
-            </span>
-          </Tooltip>
-        ) : (
-          <StatusTag status={instance.state} />
-        )
-      }
+      status={<StatusBadge status={instance.state} reason={instance.reason} />}
       icon={<AliIcon name="GPUrongqishili" size={28} />}
-      headerItems={[
-        { label: "GPU", value: gpuLabel(instance) },
-        { label: "创建时间", value: formatDateTime(instance.created_at) },
-      ]}
+      headerItems={[{ label: "GPU", value: gpuLabel(instance) }]}
       actions={
         <Space>
           <GpuInstanceActions
@@ -221,13 +208,8 @@ export function GpuInstanceDetailPage({
           fields: [
             { label: "ID", value: <ResourceId value={instance.id} /> },
             {
-              label: "状态",
-              value: (
-                <Space wrap size={4}>
-                  <StatusTag status={instance.state} />
-                  {instance.termination_protection ? <Tag color="orange">终止保护</Tag> : null}
-                </Space>
-              ),
+              label: "终止保护",
+              value: instance.termination_protection ? "已开启" : "未开启",
             },
             {
               label: "规格",

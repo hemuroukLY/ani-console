@@ -1,6 +1,6 @@
 import { applyInstanceLifecycle } from "@/api/instances";
 import type { StorageVolume } from "@/api/storage/volumes";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { AttachVolumeModal } from "@/components/storage/AttachVolumeModal";
 import { Button, Empty, Modal } from "@arco-design/web-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -48,7 +48,7 @@ export function VolumeRelatedResources({ volume }: { volume: StorageVolume }) {
             { title: "实例名称", dataIndex: "instance_name" },
             { title: "实例 ID", dataIndex: "instance_id" },
             { title: "实例类型", dataIndex: "kind", placeholder: "-" },
-            { title: "状态", render: (_, item) => <StatusTag status={item.state} /> },
+            { title: "状态", render: (_, item) => <StatusBadge status={item.state} /> },
           ]}
           data={items}
           pagination={false}

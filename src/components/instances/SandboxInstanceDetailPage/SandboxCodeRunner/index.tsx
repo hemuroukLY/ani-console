@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/common";
 import { createSandboxCodeRun, type SandboxCodeRun } from "@/api/instances";
 import type { AsyncTask } from "@/api/tasks";
 import { formatDateTime } from "@/lib/format";
@@ -11,7 +12,6 @@ import {
   InputNumber,
   Select,
   Space,
-  Tag,
   Tooltip,
   Typography,
 } from "@arco-design/web-react";
@@ -140,11 +140,7 @@ export function SandboxCodeRunner({
               data={[
                 {
                   label: "状态",
-                  value: (
-                    <Tag color={lastRun.status === "succeeded" ? "green" : "orange"}>
-                      {lastRun.status}
-                    </Tag>
-                  ),
+                  value: <StatusBadge status={lastRun.status} />,
                 },
                 {
                   label: "退出码",

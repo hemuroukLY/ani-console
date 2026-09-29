@@ -5,7 +5,7 @@ import {
   type VectorStore,
 } from "@/api/storage/vector-stores";
 import { withId } from "@/lib/id";
-import { Button, Dropdown, Menu, Modal, Tooltip } from "@arco-design/web-react";
+import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -15,7 +15,7 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { VectorStoreWorkbench } from "@/components/storage/VectorStoreWorkbench";
@@ -77,25 +77,14 @@ export function VectorStoreDetailPage({
   });
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
   const store = detail.data as VectorStore;
-  const storeStatus = store.reason ? (
-    <Tooltip content={store.reason}>
-      <span className="inline-flex">
-        <StatusTag status={store.state} />
-      </span>
-    </Tooltip>
-  ) : (
-    <StatusTag status={store.state} />
-  );
+  const storeStatus = <StatusBadge status={store.state} reason={store.reason} />;
   return (
     <DetailPageFrame
       breadcrumbs={[...navigationBreadcrumbsForPath("/vector-stores"), { label: store.name }]}
       title={store.name}
       status={storeStatus}
       icon={<AliIcon name="xiangliangcunchu" size={28} />}
-      headerItems={[
-        { label: "维度", value: String(store.dimension) },
-        { label: "创建时间", value: formatDateTime(store.created_at) },
-      ]}
+      headerItems={[{ label: "维度", value: String(store.dimension) }]}
       actions={
         <Dropdown
           trigger="click"
@@ -154,8 +143,6 @@ export function VectorStoreDetailPage({
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={store.id} /> },
-            { label: "名称", value: store.name },
-            { label: "状态", value: storeStatus },
             { label: "向量维度", value: store.dimension },
             { label: "距离度量", value: store.metric.toUpperCase() },
             { label: "向量化模型", value: store.embedding_model || "-" },

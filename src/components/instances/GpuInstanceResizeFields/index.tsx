@@ -2,7 +2,7 @@ import type { InstanceRecord } from "@/api/instances";
 import { getGpuSpecAvailability } from "@/api/gpu-inventory";
 import { Form, Select, Typography } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
-import { StatusTag } from "@/components/common";
+import { StatusBadge } from "@/components/common";
 import { InstanceComputeSpecSelect } from "@/components/instances/InstanceComputeSpecSelect";
 import { GPU_INSTANCE_COMPUTE_SPECS } from "@/lib/instances";
 import { currentCpuMemorySpec, currentGpuSpecValue } from "./helpers";
@@ -64,7 +64,7 @@ export function GpuInstanceResizeFields({
   return (
     <>
       <Typography.Paragraph className="mb-4">
-        当前 <StatusTag status={instance.state} /> ·{" "}
+        当前 <StatusBadge status={instance.state} reason={instance.reason} /> ·{" "}
         <Typography.Text bold>
           {currentGpuLabel} · {currentCpuSpec}
         </Typography.Text>

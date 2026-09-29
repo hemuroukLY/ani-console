@@ -3,10 +3,10 @@ import {
   restoreSandboxCheckpoint,
   type SandboxCheckpoint,
 } from "@/api/instances";
-import { DataTable } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
-import { Button, Empty, Modal, Space, Tag, Tooltip, Typography } from "@arco-design/web-react";
+import { Button, Empty, Modal, Space, Typography } from "@arco-design/web-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { SandboxCheckpointCloneModal } from "./SandboxCheckpointCloneModal";
@@ -119,13 +119,7 @@ export function SandboxCheckpoints({
               {
                 title: "状态",
                 width: 120,
-                render: (_, item) => (
-                  <Tooltip content={item.reason ?? ""}>
-                    <Tag color={item.status === "available" ? "green" : "orange"}>
-                      {item.status}
-                    </Tag>
-                  </Tooltip>
-                ),
+                render: (_, item) => <StatusBadge status={item.status} reason={item.reason} />,
               },
               {
                 title: "内容",

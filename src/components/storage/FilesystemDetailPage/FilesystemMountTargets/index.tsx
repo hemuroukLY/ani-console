@@ -3,7 +3,7 @@ import {
   listFilesystemMountTargets,
   type FilesystemMountTarget,
 } from "@/api/storage/filesystems";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { CreateFilesystemMountTargetModal } from "@/components/storage/CreateFilesystemMountTargetModal";
 import { copyToClipboard } from "@/lib/clipboard";
 import { formatDateTime } from "@/lib/format";
@@ -81,7 +81,7 @@ export function FilesystemMountTargets({
             {
               title: "状态",
               width: 120,
-              render: (_, row) => <StatusTag status={row.status} />,
+              render: (_, row) => <StatusBadge status={row.status} />,
             },
             {
               title: "VPC",

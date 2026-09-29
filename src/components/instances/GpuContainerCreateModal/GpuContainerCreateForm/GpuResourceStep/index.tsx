@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/common";
 import { InstanceComputeSpecSelect } from "@/components/instances/InstanceComputeSpecSelect";
 import { Form, Input, Select, Tag } from "@arco-design/web-react";
 import { type FormValues, type GpuSpecOption, isGpuSpecSelectable } from "../../types";
@@ -9,13 +10,13 @@ function specStatusTag(spec: GpuSpecOption) {
 
   switch (spec.availability?.status) {
     case "available":
-      return <Tag color="green">剩余 {spec.availability.available_count}</Tag>;
+      return <StatusBadge tone="success">剩余 {spec.availability.available_count}</StatusBadge>;
     case "full":
-      return <Tag color="gray">配额已满</Tag>;
+      return <StatusBadge tone="neutral">配额已满</StatusBadge>;
     case "device_full":
-      return <Tag color="orange">设备已满</Tag>;
+      return <StatusBadge tone="warning">设备已满</StatusBadge>;
     case "unavailable":
-      return <Tag color="gray">暂无匹配节点</Tag>;
+      return <StatusBadge tone="neutral">暂无匹配节点</StatusBadge>;
   }
 }
 

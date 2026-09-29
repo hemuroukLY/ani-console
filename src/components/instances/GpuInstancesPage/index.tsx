@@ -1,4 +1,4 @@
-import { listInstances, type GPUSchedulingState, type InstanceRecord } from "@/api/instances";
+import { listInstances, type FilterableInstanceState, type InstanceRecord } from "@/api/instances";
 import { Tooltip } from "@arco-design/web-react";
 import { useEffect, useState } from "react";
 import { GpuContainerCreateModal } from "@/components/instances/GpuContainerCreateModal";
@@ -6,7 +6,7 @@ import {
   ResourceNameId,
   ListPageFrame,
   type ListColumn,
-  StatusTag,
+  StatusBadge,
   ListDataTable,
 } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
@@ -15,7 +15,7 @@ import { getImageDisplayName } from "@/lib/render";
 import { useGpuInstanceRowActions } from "./GpuInstanceRowActions";
 
 type Instance = InstanceRecord;
-type StatusFilter = "all" | GPUSchedulingState;
+type StatusFilter = "all" | FilterableInstanceState;
 type SearchField = "name" | "id";
 
 export function GpuInstancesPage() {
@@ -38,7 +38,7 @@ export function GpuInstancesPage() {
           limit,
           cursor,
           kind: "gpu_container",
-          scheduling_state: status === "all" ? undefined : status,
+          state: status === "all" ? undefined : status,
           search_field: keyword ? searchField : undefined,
           keyword: keyword || undefined,
         };
@@ -54,9 +54,11 @@ export function GpuInstancesPage() {
   const items = allItems;
   const tabs = [
     { value: "all" as const, label: "全部" },
-    { value: "pending" as const, label: "排队中" },
-    { value: "scheduled" as const, label: "已调度" },
+    { value: "pending" as const, label: "等待中" },
+    { value: "provisioning" as const, label: "配置中" },
+    { value: "starting" as const, label: "启动中" },
     { value: "running" as const, label: "运行中" },
+    { value: "stopping" as const, label: "停止中" },
     { value: "stopped" as const, label: "已停止" },
     { value: "failed" as const, label: "异常" },
   ];
@@ -71,7 +73,7 @@ export function GpuInstancesPage() {
       title: "状态",
       width: 120,
       render: (_, row) => {
-        const statusTag = <StatusTag status={row.state} />;
+        const statusTag = <StatusBadge status={row.state} />;
 
         return row.reason ? (
           <Tooltip content={row.reason}>
@@ -109,7 +111,7 @@ export function GpuInstancesPage() {
       title: "发布",
       width: 120,
       render: (_, row) =>
-        row.container?.rollout_status ? <StatusTag status={row.container.rollout_status} /> : "-",
+        row.container?.rollout_status ? <StatusBadge status={row.container.rollout_status} /> : "-",
     },
     {
       key: "node",
@@ -117,6 +119,12 @@ export function GpuInstancesPage() {
       width: 100,
       dataIndex: "compute.node_name",
       placeholder: "-",
+    },
+    {
+      key: "protection",
+      title: "终止保护",
+      width: 100,
+      render: (_, row) => (row.termination_protection ? "已开启" : "未开启"),
     },
     {
       key: "created",

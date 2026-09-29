@@ -15,7 +15,7 @@ import {
   ResourceNameId,
   ListPageFrame,
   type ListColumn,
-  StatusTag,
+  StatusBadge,
   ListDataTable,
 } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
@@ -104,7 +104,7 @@ export function LoadBalancersPage() {
       key: "state",
       title: "状态",
       width: 120,
-      render: (_, item) => <StatusTag status={item.state} />,
+      render: (_, item) => <StatusBadge status={item.state} />,
     },
     {
       key: "vip",

@@ -9,7 +9,7 @@ import {
   DetailPagePlaceholder,
   ImageNameText,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { InstanceEvents } from "@/components/instances/InstanceEvents";
 import { InstanceLogs } from "@/components/instances/InstanceLogs";
@@ -169,22 +169,9 @@ export function VmInstanceDetailPage({
       <DetailPageFrame
         breadcrumbs={[...navigationBreadcrumbsForPath("/vm-instances"), { label: instance.name }]}
         title={instance.name}
-        status={
-          instance.reason ? (
-            <Tooltip content={instance.reason}>
-              <span className="inline-flex">
-                <StatusTag status={instance.state} />
-              </span>
-            </Tooltip>
-          ) : (
-            <StatusTag status={instance.state} />
-          )
-        }
+        status={<StatusBadge status={instance.state} reason={instance.reason} />}
         icon={<AliIcon name="yunzhuji" size={28} />}
-        headerItems={[
-          { label: "CPU / 内存", value: specLabel(instance) },
-          { label: "创建时间", value: formatDateTime(instance.created_at) },
-        ]}
+        headerItems={[{ label: "CPU / 内存", value: specLabel(instance) }]}
         actions={
           <VmInstanceActions
             instance={instance}
@@ -198,7 +185,10 @@ export function VmInstanceDetailPage({
             title: "基本信息",
             fields: [
               { label: "ID", value: <ResourceId value={instance.id} /> },
-              { label: "状态", value: <StatusTag status={instance.state} /> },
+              {
+                label: "终止保护",
+                value: instance.termination_protection ? "已开启" : "未开启",
+              },
               { label: "规格", value: flavorLabel(instance) },
               {
                 label: "镜像",

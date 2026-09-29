@@ -1,15 +1,7 @@
-import {
-  Alert,
-  Card,
-  Empty,
-  Progress,
-  Skeleton,
-  Space,
-  Tag,
-  Typography,
-} from "@arco-design/web-react";
+import { Alert, Card, Empty, Progress, Skeleton, Space, Typography } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
 import { getGpuSpecAvailability } from "@/api/gpu-inventory";
+import { StatusBadge } from "@/components/common";
 
 export function GpuAdmissionSummary() {
   const availability = useQuery({
@@ -59,10 +51,10 @@ export function GpuAdmissionSummary() {
             </div>
           </div>
           <Space wrap>
-            <Tag color="green">可用 {availableSpecs}</Tag>
-            <Tag color="orange">配额不足 {quotaFullSpecs}</Tag>
-            <Tag color="orange">设备不足 {deviceFullSpecs}</Tag>
-            <Tag color="red">不可用 {unavailableSpecs}</Tag>
+            <StatusBadge tone="success">可用 {availableSpecs}</StatusBadge>
+            <StatusBadge tone="warning">配额不足 {quotaFullSpecs}</StatusBadge>
+            <StatusBadge tone="warning">设备不足 {deviceFullSpecs}</StatusBadge>
+            <StatusBadge tone="danger">不可用 {unavailableSpecs}</StatusBadge>
           </Space>
           <Alert
             type={canCreate ? "success" : "warning"}

@@ -3,9 +3,9 @@ import {
   type InstanceRecord,
   type SandboxInstanceStatus,
 } from "@/api/instances";
-import { DataTable } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { copyToClipboard } from "@/lib/clipboard";
-import { Button, Empty, Modal, Space, Tag, Typography } from "@arco-design/web-react";
+import { Button, Empty, Modal, Space, Typography } from "@arco-design/web-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { SandboxPortOpenModal } from "./SandboxPortOpenModal";
@@ -110,9 +110,7 @@ export function SandboxAccess({
             {
               title: "状态",
               width: 120,
-              render: (_, item) => (
-                <Tag color={item.status === "available" ? "green" : "orange"}>{item.status}</Tag>
-              ),
+              render: (_, item) => <StatusBadge status={item.status} />,
             },
             {
               title: "预览地址",

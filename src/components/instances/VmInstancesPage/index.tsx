@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   ResourceNameId,
   ListPageFrame,
-  StatusTag,
+  StatusBadge,
   type ListColumn,
   ListDataTable,
 } from "@/components/common";
@@ -81,7 +81,7 @@ export function VmInstancesPage() {
       key: "state",
       title: "状态",
       width: 120,
-      render: (_, row) => <StatusTag status={row.state} />,
+      render: (_, row) => <StatusBadge status={row.state} reason={row.reason} />,
     },
     { key: "spec", title: "规格", width: 80, render: (_, row) => specLabel(row) },
     {
@@ -109,7 +109,7 @@ export function VmInstancesPage() {
       key: "protection",
       title: "终止保护",
       width: 100,
-      render: (_, row) => (row.termination_protection ? "开启" : "关闭"),
+      render: (_, row) => (row.termination_protection ? "已开启" : "未开启"),
     },
     {
       key: "createdAt",

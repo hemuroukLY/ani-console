@@ -55,7 +55,6 @@ export function BucketDetailPage({
             label: "对象数",
             value: String(bucketInfo.object_count ?? 0),
           },
-          { label: "创建时间", value: formatDateTime(bucketInfo.created_at) },
         ]}
         actions={
           <Dropdown

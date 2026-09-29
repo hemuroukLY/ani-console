@@ -16,7 +16,7 @@ import {
   ResourceNameId,
   ListPageFrame,
   type ListColumn,
-  StatusTag,
+  StatusBadge,
   ListDataTable,
 } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
@@ -175,7 +175,7 @@ export function SubnetsPage() {
       key: "state",
       title: "状态",
       width: 120,
-      render: (_, subnet) => <StatusTag status={subnet.state} />,
+      render: (_, subnet) => <StatusBadge status={subnet.state} />,
     },
     {
       key: "vpc",

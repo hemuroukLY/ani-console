@@ -13,7 +13,7 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
   type DetailCard,
 } from "@/components/common";
 import { formatBytes, formatDateTime } from "@/lib/format";
@@ -70,11 +70,6 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
       title: "基本信息",
       fields: [
         { label: "ID", value: <ResourceId value={item.id} /> },
-        { label: "名称", value: item.name },
-        {
-          label: "状态",
-          value: <StatusTag status={item.status} />,
-        },
         { label: "来源", value: MODEL_SOURCE_LABELS[item.source] },
         {
           label: "任务",
@@ -104,7 +99,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
       <DetailPageFrame
         breadcrumbs={[...navigationBreadcrumbsForPath("/models"), { label: item.name }]}
         title={item.name}
-        status={<StatusTag status={item.status} />}
+        status={<StatusBadge status={item.status} />}
         icon={<AliIcon name="moxing" size={28} />}
         headerItems={[
           { label: "最新版本", value: latestVersion?.version ?? "-" },

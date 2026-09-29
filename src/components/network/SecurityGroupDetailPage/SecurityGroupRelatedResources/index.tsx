@@ -4,7 +4,7 @@ import {
   type NetworkSecurityGroupBinding,
   type NetworkVPC,
 } from "@/api/network";
-import { StatusTag } from "@/components/common";
+import { StatusBadge } from "@/components/common";
 import { withId } from "@/lib/id";
 import { Card, Empty, List, Space, Tag, Typography } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
@@ -91,7 +91,7 @@ export function SecurityGroupRelatedResources({
           <Typography.Text className="shrink-0" type="secondary">
             {resource.id}
           </Typography.Text>
-          <StatusTag status={resource.status} />
+          <StatusBadge status={resource.status} />
         </div>
       )}
     />

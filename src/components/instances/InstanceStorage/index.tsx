@@ -4,7 +4,7 @@ import type { StorageFilesystem } from "@/api/storage/filesystems";
 import { listFilesystemMountTargets, listFilesystems } from "@/api/storage/filesystems";
 import type { StorageVolume } from "@/api/storage/volumes";
 import { listVolumes } from "@/api/storage/volumes";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { withId } from "@/lib/id";
 import { Button, Checkbox, Empty, Form, Input, Modal, Select, Space } from "@arco-design/web-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -234,7 +234,7 @@ export function InstanceStorage({
                 title: "状态",
                 width: 120,
                 render: (_, filesystem) =>
-                  filesystem.status ? <StatusTag status={filesystem.status} /> : "-",
+                  filesystem.status ? <StatusBadge status={filesystem.status} /> : "-",
               },
             ]}
           />

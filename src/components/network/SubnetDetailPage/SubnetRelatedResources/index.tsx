@@ -1,5 +1,5 @@
 import { listInstances, type InstanceRecord } from "@/api/instances";
-import { DataTable, StatusTag, type ListColumn } from "@/components/common";
+import { DataTable, StatusBadge, type ListColumn } from "@/components/common";
 import { withId } from "@/lib/id";
 import { Empty, Tag, Typography } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +25,7 @@ export function SubnetRelatedResources({ subnetId }: { subnetId: string }) {
     { title: "类型", width: 120, render: (_, item) => <Tag>{item.kind}</Tag> },
     { title: "名称", dataIndex: "name" },
     { title: "资源 ID", dataIndex: "id" },
-    { title: "状态", width: 120, render: (_, item) => <StatusTag status={item.status} /> },
+    { title: "状态", width: 120, render: (_, item) => <StatusBadge status={item.status} /> },
   ];
 
   return (

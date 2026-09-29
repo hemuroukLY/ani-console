@@ -4,10 +4,10 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { withId } from "@/lib/id";
-import { Button, Dropdown, Menu, Modal, Tooltip } from "@arco-design/web-react";
+import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -65,15 +65,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
     .join("、");
   const mounted = mountedInstances.length > 0;
   // const unavailable = (description: string) => <Empty description={description} />;
-  const volumeStatus = volume.reason ? (
-    <Tooltip content={volume.reason}>
-      <span className="inline-flex">
-        <StatusTag status={volume.state} />
-      </span>
-    </Tooltip>
-  ) : (
-    <StatusTag status={volume.state} />
-  );
+  const volumeStatus = <StatusBadge status={volume.state} reason={volume.reason} />;
   const volumeType = (volume.volume_type ?? volume.storage_class).toUpperCase();
   const autoSnapshot = volume.auto_snapshot;
   const autoSnapshotText = autoSnapshot
@@ -119,10 +111,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
         title={volume.name}
         status={volumeStatus}
         icon={<AliIcon name="kuaicunchu" size={28} />}
-        headerItems={[
-          { label: "容量 (GiB)", value: String(volume.size_gib) },
-          { label: "创建时间", value: formatDateTime(volume.created_at) },
-        ]}
+        headerItems={[{ label: "容量 (GiB)", value: String(volume.size_gib) }]}
         actions={
           <Dropdown trigger="click" position="br" droplist={moreMenu}>
             <Button disabled={deleteVolume.isPending} aria-label="更多操作" title="更多操作">
@@ -159,6 +148,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
               },
               { label: "OS 初始化", value: osInitStatus },
               { label: "约束", value: "已挂载不可删 · 扩容不可缩" },
+              { label: "创建时间", value: formatDateTime(volume.created_at) },
             ],
           },
           {

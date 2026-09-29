@@ -1,5 +1,5 @@
 import { listK8sClusterWorkloads, type K8sClusterWorkload } from "@/api/k8s-clusters";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { withId } from "@/lib/id";
 import { Card, Empty, Grid } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
@@ -43,7 +43,7 @@ export function K8sWorkloads({ clusterId }: { clusterId: string }) {
           {
             title: "状态",
             width: 120,
-            render: (_, row) => <StatusTag status={row.status} />,
+            render: (_, row) => <StatusBadge status={row.status} />,
           },
         ]}
         data={items}

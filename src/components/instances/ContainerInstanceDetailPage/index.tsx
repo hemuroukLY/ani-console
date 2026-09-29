@@ -1,6 +1,5 @@
 import { withId } from "@/lib/id";
 import type { InstanceRecord } from "@/api/instances";
-import { Tooltip } from "@arco-design/web-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -8,7 +7,7 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { InstanceLogs } from "@/components/instances/InstanceLogs";
 import { InstanceEvents } from "@/components/instances/InstanceEvents";
@@ -69,17 +68,7 @@ export function ContainerInstanceDetailPage({
       ]}
       icon={<AliIcon name="icon-rongqishili" size={28} />}
       title={detail.name}
-      status={
-        detail.reason ? (
-          <Tooltip content={detail.reason}>
-            <span className="inline-flex">
-              <StatusTag status={detail.state} />
-            </span>
-          </Tooltip>
-        ) : (
-          <StatusTag status={detail.state} />
-        )
-      }
+      status={<StatusBadge status={detail.state} reason={detail.reason} />}
       headerItems={[
         { label: "镜像", value: getImageDisplayName(detail.image) },
         { label: "规格", value: nameValue },

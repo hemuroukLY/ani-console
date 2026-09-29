@@ -1,7 +1,7 @@
 import type { InstanceRecord } from "@/api/instances";
 import { Button, Empty, Tooltip } from "@arco-design/web-react";
 import { useState } from "react";
-import { DataTable, ResourceNameId, StatusTag } from "@/components/common";
+import { DataTable, ResourceNameId, StatusBadge } from "@/components/common";
 import { VmInstanceRollbackModal } from "@/components/instances/VmInstanceActions/VmInstanceRollbackModal";
 import { VmInstanceSnapshotModal } from "@/components/instances/VmInstanceActions/VmInstanceSnapshotModal";
 import { formatDateTime } from "@/lib/format";
@@ -67,7 +67,7 @@ export function VmInstanceSnapshots({
               title: "状态",
               width: 120,
               render: (_, snapshot) => {
-                const statusTag = <StatusTag status={snapshot.state} />;
+                const statusTag = <StatusBadge status={snapshot.state} />;
                 return snapshot.reason ? (
                   <Tooltip content={snapshot.reason}>
                     <span className="inline-flex">{statusTag}</span>

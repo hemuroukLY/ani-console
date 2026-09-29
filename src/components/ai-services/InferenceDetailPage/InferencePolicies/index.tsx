@@ -5,7 +5,7 @@ import {
   listInferenceServicePolicies,
   type InferenceAccessPolicy,
 } from "@/api/ai-services/inference";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 
 const SCOPE_LABELS: Record<InferenceAccessPolicy["scope"]["type"], string> = {
@@ -61,7 +61,7 @@ export function InferencePolicies({ serviceId }: { serviceId: string }) {
           {
             title: "状态",
             width: 110,
-            render: (_, policy) => <StatusTag status={policy.status} />,
+            render: (_, policy) => <StatusBadge status={policy.status} />,
           },
           {
             title: "作用范围",

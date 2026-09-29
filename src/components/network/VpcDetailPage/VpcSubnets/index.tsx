@@ -1,5 +1,5 @@
 import { listNetworkSubnets, type NetworkSubnet } from "@/api/network";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { withId } from "@/lib/id";
 import { useQuery } from "@tanstack/react-query";
 
@@ -26,7 +26,7 @@ export function VpcSubnets({ vpcId }: { vpcId: string }) {
         {
           title: "状态",
           width: 120,
-          render: (_, item) => <StatusTag status={item.state} />,
+          render: (_, item) => <StatusBadge status={item.state} />,
         },
       ]}
       data={items}

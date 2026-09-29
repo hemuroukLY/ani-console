@@ -8,7 +8,7 @@ import { ImportModelModal } from "@/components/ai-services/ImportModelModal";
 import {
   ResourceNameId,
   ListPageFrame,
-  StatusTag,
+  StatusBadge,
   type ListColumn,
   ListDataTable,
 } from "@/components/common";
@@ -106,7 +106,7 @@ export function ModelsPage() {
       key: "status",
       title: "状态",
       width: 120,
-      render: (_, item) => <StatusTag status={item.status} />,
+      render: (_, item) => <StatusBadge status={item.status} />,
     },
     {
       key: "source",

@@ -1,7 +1,7 @@
 import { withId } from "@/lib/id";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, Space, Tooltip } from "@arco-design/web-react";
+import { Button, Modal, Space } from "@arco-design/web-react";
 import {
   completeStorageObjectUpload,
   deleteStorageObject,
@@ -15,7 +15,7 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { openExternalUrl } from "@/lib/browser";
@@ -78,15 +78,7 @@ export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; obj
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
   const object = detail.data as StorageObject;
-  const objectStatus = object.reason ? (
-    <Tooltip content={object.reason}>
-      <span className="inline-flex">
-        <StatusTag status={object.state} />
-      </span>
-    </Tooltip>
-  ) : (
-    <StatusTag status={object.state} />
-  );
+  const objectStatus = <StatusBadge status={object.state} reason={object.reason} />;
 
   return (
     <DetailPageFrame
@@ -102,10 +94,7 @@ export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; obj
       title={object.key}
       status={objectStatus}
       icon={<AliIcon name="file" size={28} />}
-      headerItems={[
-        { label: "大小", value: formatBytes(object.size_bytes) },
-        { label: "创建时间", value: formatDateTime(object.created_at) },
-      ]}
+      headerItems={[{ label: "大小", value: formatBytes(object.size_bytes) }]}
       actions={
         <Space wrap>
           {object.state === "pending" ? (
@@ -149,7 +138,6 @@ export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; obj
             { label: "Key", value: object.key },
             { label: "大小", value: formatBytes(object.size_bytes) },
             { label: "类型", value: object.content_type },
-            { label: "状态", value: objectStatus },
             { label: "创建时间", value: formatDateTime(object.created_at) },
             { label: "更新时间", value: formatDateTime(object.updated_at) },
           ],

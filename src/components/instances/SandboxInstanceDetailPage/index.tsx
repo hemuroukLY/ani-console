@@ -1,6 +1,6 @@
 import { withId } from "@/lib/id";
 import { getInstance } from "@/api/instances";
-import { Empty, Tooltip } from "@arco-design/web-react";
+import { Empty } from "@arco-design/web-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -9,7 +9,7 @@ import {
   DetailPagePlaceholder,
   ImageNameText,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { InstanceLogs } from "@/components/instances/InstanceLogs";
 import { InstanceMetrics } from "@/components/instances/InstanceMetrics";
@@ -76,17 +76,7 @@ export function SandboxInstanceDetailPage({
         { label: instance.name || instance.id },
       ]}
       title={instance.name || instance.id}
-      status={
-        instance.reason ? (
-          <Tooltip content={instance.reason}>
-            <span className="inline-flex">
-              <StatusTag status={sessionState} />
-            </span>
-          </Tooltip>
-        ) : (
-          <StatusTag status={sessionState} />
-        )
-      }
+      status={<StatusBadge status={sessionState} reason={instance.reason} />}
       icon={<AliIcon name="Sandbox" size={28} />}
       headerItems={[
         {
@@ -96,7 +86,6 @@ export function SandboxInstanceDetailPage({
               .filter((value) => value != null)
               .join(" / ") || "-",
         },
-        { label: "创建时间", value: formatDateTime(instance.created_at) },
       ]}
       actions={
         <SandboxInstanceActions
@@ -116,7 +105,10 @@ export function SandboxInstanceDetailPage({
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={instance.id} /> },
-            { label: "状态", value: <StatusTag status={sessionState} /> },
+            {
+              label: "终止保护",
+              value: instance.termination_protection ? "已开启" : "未开启",
+            },
             {
               label: "镜像",
               value: <ImageNameText image={instance.image} />,

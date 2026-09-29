@@ -1,5 +1,5 @@
 import type { StorageVolumeMountHistoryEntry } from "@/api/storage/volumes";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 import { Empty } from "@arco-design/web-react";
 
@@ -17,7 +17,7 @@ export function VolumeMountHistory({ items }: { items: StorageVolumeMountHistory
         { title: "时间", render: (_, item) => formatDateTime(item.at) },
         { title: "操作", render: (_, item) => actionText[item.action] },
         { title: "目标", dataIndex: "target", placeholder: "-" },
-        { title: "结果", render: (_, item) => <StatusTag status={item.result} /> },
+        { title: "结果", render: (_, item) => <StatusBadge status={item.result} /> },
       ]}
       data={items}
       pagination={false}

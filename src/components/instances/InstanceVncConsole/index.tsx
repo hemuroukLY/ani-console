@@ -1,6 +1,7 @@
+import { StatusBadge, type StatusBadgeTone } from "@/components/common";
 import { useEffect, useRef, useState } from "react";
 import RFB from "@novnc/novnc/lib/rfb";
-import { Button, Radio, Spin, Tag } from "@arco-design/web-react";
+import { Button, Radio, Spin } from "@arco-design/web-react";
 import clsx from "clsx";
 import { createInstanceConsoleSession } from "@/api/instances";
 import { resolveWebSocketUrl } from "@/lib/browser";
@@ -13,12 +14,12 @@ type ViewMode = "fit" | "native";
 
 const VNC_SUBPROTOCOL = "ani.vnc.v1";
 
-const STATUS_META: Record<ConsoleStatus, { text: string; color: string }> = {
-  connecting: { text: "连接中", color: "blue" },
-  connected: { text: "已连接", color: "green" },
-  disconnected: { text: "已断开", color: "gray" },
-  error: { text: "连接异常", color: "red" },
-  expired: { text: "会话过期", color: "orangered" },
+const STATUS_META: Record<ConsoleStatus, { text: string; tone: StatusBadgeTone }> = {
+  connecting: { text: "连接中", tone: "primary" },
+  connected: { text: "已连接", tone: "success" },
+  disconnected: { text: "已断开", tone: "neutral" },
+  error: { text: "连接异常", tone: "danger" },
+  expired: { text: "会话过期", tone: "warning" },
 };
 
 function isExpired(expiresAt?: string | null): boolean {
@@ -166,7 +167,9 @@ export function InstanceVncConsole({
             <Radio value="fit">适配窗口</Radio>
             <Radio value="native">原始尺寸</Radio>
           </Radio.Group>
-          <Tag color={meta.color}>{meta.text}</Tag>
+          <StatusBadge status={status} tone={meta.tone} loading={status === "connecting"}>
+            {meta.text}
+          </StatusBadge>
           {canReconnect ? (
             <Button
               size="mini"

@@ -1,5 +1,5 @@
 import { listVolumeSnapshots, type VolumeSnapshotRecord } from "@/api/storage/volumes";
-import { DataTable, StatusTag } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { CreateVolumeSnapshotModal } from "@/components/storage/CreateVolumeSnapshotModal";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
@@ -35,7 +35,7 @@ export function VolumeSnapshots({ volumeId }: { volumeId: string }) {
             {
               title: "状态",
               width: 120,
-              render: (_, row) => <StatusTag status={row.status} />,
+              render: (_, row) => <StatusBadge status={row.status} />,
             },
             { title: "大小", render: (_, row) => formatBytes(row.size_bytes) },
             { title: "创建时间", render: (_, row) => formatDateTime(row.created_at) },

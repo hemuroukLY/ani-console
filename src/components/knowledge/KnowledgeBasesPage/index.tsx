@@ -9,7 +9,7 @@ import {
   ResourceNameId,
   ListPageFrame,
   type ListColumn,
-  StatusTag,
+  StatusBadge,
   ListDataTable,
 } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
@@ -81,7 +81,7 @@ export function KnowledgeBasesPage() {
       key: "status",
       title: "状态",
       width: 120,
-      render: (_, item) => <StatusTag status={item.status} />,
+      render: (_, item) => <StatusBadge status={item.status} />,
     },
     {
       key: "docs",

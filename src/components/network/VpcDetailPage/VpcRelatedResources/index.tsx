@@ -9,7 +9,7 @@ import {
   type NetworkSecurityGroup,
   type NetworkSubnet,
 } from "@/api/network";
-import { DataTable, StatusTag, type ListColumn } from "@/components/common";
+import { DataTable, StatusBadge, type ListColumn } from "@/components/common";
 import { withId } from "@/lib/id";
 import { Empty, Space, Tag, Typography } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
@@ -130,7 +130,7 @@ export function VpcRelatedResources({ vpcId }: { vpcId: string }) {
     {
       title: "状态",
       width: 120,
-      render: (_, resource) => <StatusTag status={resource.status} />,
+      render: (_, resource) => <StatusBadge status={resource.status} />,
     },
   ];
 

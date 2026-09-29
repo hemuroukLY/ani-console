@@ -3,10 +3,10 @@ import {
   listBucketLifecycleRules,
   type StorageBucketLifecycleRule,
 } from "@/api/storage/buckets";
-import { DataTable } from "@/components/common";
+import { DataTable, StatusBadge } from "@/components/common";
 import { CreateLifecycleRuleModal } from "@/components/storage/CreateLifecycleRuleModal";
 import { withId } from "@/lib/id";
-import { Button, Empty, Modal, Space, Tag, Typography } from "@arco-design/web-react";
+import { Button, Empty, Modal, Space, Typography } from "@arco-design/web-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -70,7 +70,9 @@ export function BucketLifecycle({ bucketId }: { bucketId: string }) {
               title: "状态",
               width: 120,
               render: (_, row) => (
-                <Tag color={row.enabled ? "green" : "gray"}>{row.enabled ? "启用" : "停用"}</Tag>
+                <StatusBadge tone={row.enabled ? "success" : "neutral"}>
+                  {row.enabled ? "启用" : "停用"}
+                </StatusBadge>
               ),
             },
           ]}

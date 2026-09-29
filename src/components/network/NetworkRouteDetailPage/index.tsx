@@ -67,10 +67,7 @@ export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
       breadcrumbs={[...navigationBreadcrumbsForPath("/routes"), { label: name }]}
       title={name}
       icon={<AliIcon name="VPCluyouqi" size={28} />}
-      headerItems={[
-        { label: "目标网段", value: item.destination_cidr },
-        { label: "创建时间", value: formatDateTime(item.created_at) },
-      ]}
+      headerItems={[{ label: "目标网段", value: item.destination_cidr }]}
       actions={
         <Dropdown
           trigger="click"
@@ -106,7 +103,6 @@ export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
           title: "基本信息",
           fields: [
             { label: "ID", value: <ResourceId value={item.id} /> },
-            { label: "名称", value: item.description?.trim() || "-" },
             {
               label: "VPC",
               value: parentVpc?.name ?? (vpc.isLoading ? "加载中…" : item.vpc_id),

@@ -1,7 +1,7 @@
 import type { InstanceRecord } from "@/api/instances";
-import { Descriptions, Empty, Space, Tag, Tooltip, Typography } from "@arco-design/web-react";
+import { Descriptions, Empty, Space, Tooltip, Typography } from "@arco-design/web-react";
 import type { ReactNode } from "react";
-import { DataTable, ImageNameText } from "@/components/common";
+import { DataTable, ImageNameText, StatusBadge } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
 
@@ -93,9 +93,9 @@ export function InstanceReleases({
                       </span>
                     </Tooltip>
                     {revision === currentRevision ? (
-                      <Tag color="arcoblue" className="shrink-0">
+                      <StatusBadge tone="primary" className="shrink-0">
                         当前
-                      </Tag>
+                      </StatusBadge>
                     ) : null}
                   </div>
                 ),

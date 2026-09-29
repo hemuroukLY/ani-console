@@ -4,10 +4,10 @@ import {
   DetailPageFrame,
   DetailPagePlaceholder,
   ResourceId,
-  StatusTag,
+  StatusBadge,
 } from "@/components/common";
 import { withId } from "@/lib/id";
-import { Button, Dropdown, Menu, Modal, Tooltip } from "@arco-design/web-react";
+import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -56,15 +56,7 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
 
   const filesystem = detail.data as Filesystem;
   // const unavailable = (description: string) => <Empty description={description} />;
-  const filesystemStatus = filesystem.reason ? (
-    <Tooltip content={filesystem.reason}>
-      <span className="inline-flex">
-        <StatusTag status={filesystem.state} />
-      </span>
-    </Tooltip>
-  ) : (
-    <StatusTag status={filesystem.state} />
-  );
+  const filesystemStatus = <StatusBadge status={filesystem.state} reason={filesystem.reason} />;
   const handleMoreAction = (action: string) => {
     if (action === "expand") {
       setExpandVisible(true);
@@ -98,10 +90,7 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
         title={filesystem.name}
         status={filesystemStatus}
         icon={<AliIcon name="wenjiancunchu" size={28} />}
-        headerItems={[
-          { label: "容量 (GiB)", value: String(filesystem.size_gib) },
-          { label: "创建时间", value: formatDateTime(filesystem.created_at) },
-        ]}
+        headerItems={[{ label: "容量 (GiB)", value: String(filesystem.size_gib) }]}
         actions={
           <Dropdown trigger="click" position="br" droplist={moreMenu}>
             <Button disabled={remove.isPending} aria-label="更多操作" title="更多操作">
@@ -115,8 +104,6 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
             title: "基本信息",
             fields: [
               { label: "ID", value: <ResourceId value={filesystem.id} /> },
-              { label: "名称", value: filesystem.name },
-              { label: "状态", value: filesystemStatus },
               { label: "协议", value: filesystem.protocol.toUpperCase() },
               {
                 label: "性能模式",

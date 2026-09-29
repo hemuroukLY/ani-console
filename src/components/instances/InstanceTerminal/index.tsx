@@ -1,5 +1,6 @@
+import { StatusBadge, type StatusBadgeTone } from "@/components/common";
 import { useEffect, useRef, useState } from "react";
-import { Button, Space, Tag } from "@arco-design/web-react";
+import { Button, Space } from "@arco-design/web-react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import clsx from "clsx";
@@ -29,11 +30,11 @@ const TERMINAL_THEME = {
   selectionBackground: "rgba(120, 150, 255, 0.35)",
 };
 
-const STATUS_META: Record<TerminalStatus, { text: string; color: string }> = {
-  connecting: { text: "连接中", color: "blue" },
-  connected: { text: "已连接", color: "green" },
-  closed: { text: "已断开", color: "gray" },
-  error: { text: "连接异常", color: "red" },
+const STATUS_META: Record<TerminalStatus, { text: string; tone: StatusBadgeTone }> = {
+  connecting: { text: "连接中", tone: "primary" },
+  connected: { text: "已连接", tone: "success" },
+  closed: { text: "已断开", tone: "neutral" },
+  error: { text: "连接异常", tone: "danger" },
 };
 
 function packStdin(data: string) {
@@ -298,7 +299,9 @@ export function InstanceTerminal({
       <div className="flex shrink-0 items-center justify-between gap-4">
         <Space>
           <span className="text-sm text-app-text-secondary">状态</span>
-          <Tag color={meta.color}>{meta.text}</Tag>
+          <StatusBadge status={status} tone={meta.tone} loading={status === "connecting"}>
+            {meta.text}
+          </StatusBadge>
         </Space>
         <Button
           size="small"

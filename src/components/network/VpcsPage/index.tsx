@@ -17,7 +17,7 @@ import {
   ResourceNameId,
   ListPageFrame,
   type ListColumn,
-  StatusTag,
+  StatusBadge,
   ListDataTable,
 } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
@@ -166,7 +166,7 @@ function VpcList() {
       key: "state",
       title: "状态",
       width: 120,
-      render: (_, vpc) => <StatusTag status={vpc.state} />,
+      render: (_, vpc) => <StatusBadge status={vpc.state} />,
     },
     { key: "cidr", title: "CIDR", dataIndex: "cidr" },
     {
