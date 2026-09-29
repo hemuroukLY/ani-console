@@ -1157,54 +1157,6 @@
   font-size: 14px;
 }
 
-.topnav-about-overview {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 4px 0 20px;
-}
-
-.topnav-about-mark {
-  display: inline-flex;
-  flex: 0 0 48px;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgb(var(--primary-5)), rgb(var(--primary-7)));
-  color: var(--color-white);
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.topnav-about-overview h3,
-.topnav-about-overview p {
-  margin: 0;
-}
-
-.topnav-about-overview h3 {
-  color: var(--color-text-1);
-  font-size: 18px;
-  line-height: 26px;
-}
-
-.topnav-about-overview p {
-  margin-top: 2px;
-  color: var(--color-text-3);
-  font-size: 14px;
-  line-height: 22px;
-}
-
-.topnav-about-placeholder {
-  padding: 16px;
-  border-radius: 8px;
-  background: var(--color-fill-1);
-  color: var(--color-text-2);
-  font-size: 14px;
-  line-height: 24px;
-}
-
 @property --kaiwu-ring-angle {
   syntax: "<angle>";
   inherits: false;

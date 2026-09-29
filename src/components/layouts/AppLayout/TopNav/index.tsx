@@ -21,7 +21,7 @@ import { logout as logoutRequest } from "@/api/auth";
 import brandLogo from "@/assets/brand/wordmark.png";
 import { formatDateTime } from "@/lib/format";
 import { useAuthStore } from "@/stores/auth";
-import { useBrandingStore } from "@/stores/branding";
+import { AboutUsModal } from "@/components/layouts/AboutUsModal";
 
 const MOCK_REGION = { value: "guangzhou-a", label: "广州-A" };
 
@@ -40,8 +40,6 @@ export function TopNav({
   const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [regionMenuVisible, setRegionMenuVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
-  const branding = useBrandingStore((s) => s.branding);
-  const name = branding?.platform_name ?? "常青云平台";
   const clear = useAuthStore((s) => s.clear);
   const username = useAuthStore(
     (s) => (s.hasKnownUsername ? s.username : null) ?? (s.developmentBypass ? "admin" : "用户"),
@@ -243,26 +241,7 @@ export function TopNav({
           </Dropdown>
         </div>
       </header>
-      <Modal
-        className="topnav-about-modal"
-        title="关于我们"
-        visible={aboutVisible}
-        footer={null}
-        onCancel={() => setAboutVisible(false)}
-      >
-        <div className="topnav-about-overview">
-          <span className="topnav-about-mark" aria-hidden="true">
-            {name.slice(0, 1).toUpperCase()}
-          </span>
-          <div>
-            <h3>{name}</h3>
-            <p>系统介绍</p>
-          </div>
-        </div>
-        <div className="topnav-about-placeholder">
-          系统定位、核心能力与相关说明将在文案确认后补充。
-        </div>
-      </Modal>
+      {aboutVisible && <AboutUsModal onCancel={() => setAboutVisible(false)} />}
     </>
   );
 }
