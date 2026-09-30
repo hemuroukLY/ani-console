@@ -1,6 +1,6 @@
 import { withId } from "@/lib/id";
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import {
@@ -17,8 +17,7 @@ import { formatDateTime } from "@/lib/format";
 import { NetworkRouteRelatedResources } from "./NetworkRouteRelatedResources";
 
 export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("network-route");
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -52,10 +51,7 @@ export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
       },
     },
     mutationFn: (_: undefined) => deleteNetworkRoute(routeId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["network-routes"] });
-      navigate({ to: "/routes" });
-    },
+    onSuccess: goBack,
   });
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
@@ -135,7 +131,7 @@ export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
           ),
         },
       ]}
-      onBack={() => navigate({ to: "/routes" })}
+      onBack={goBack}
     />
   );
 }

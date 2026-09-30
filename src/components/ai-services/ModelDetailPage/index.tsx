@@ -1,8 +1,8 @@
 import { withId } from "@/lib/id";
 import { Button, Dropdown, Menu, Modal, Space } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useState } from "react";
 import { deleteModel, getModel } from "@/api/ai-services/models";
 
@@ -27,8 +27,7 @@ import { ModelOperationHistory } from "./ModelOperationHistory";
 // import { ModelRecommendedConfiguration } from "./ModelRecommendedConfiguration";
 
 export function ModelDetailPage({ modelId }: { modelId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("model");
   const [deployVisible, setDeployVisible] = useState(false);
   const model = useQuery({
     meta: {
@@ -52,10 +51,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
       },
     },
     mutationFn: () => deleteModel(modelId),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["models"] });
-      navigate({ to: "/models" });
-    },
+    onSuccess: goBack,
   });
 
   if (!model.data) {
@@ -163,7 +159,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
             content: <ModelOperationHistory />,
           },
         ]}
-        onBack={() => navigate({ to: "/models" })}
+        onBack={goBack}
       />
       {deployVisible && (
         <CreateInferenceServiceModal

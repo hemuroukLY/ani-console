@@ -2,7 +2,7 @@ import { withId } from "@/lib/id";
 import { getInstance } from "@/api/instances";
 import { Empty } from "@arco-design/web-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import {
   AliIcon,
   DetailPageFrame,
@@ -35,7 +35,7 @@ export function SandboxInstanceDetailPage({
   tab: SandboxInstanceDetailTabKey;
   onTabChange: (tab: SandboxInstanceDetailTabKey) => void;
 }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("sandbox-instance");
   const queryClient = useQueryClient();
 
   const detail = useQuery({
@@ -91,12 +91,7 @@ export function SandboxInstanceDetailPage({
         <SandboxInstanceActions
           instance={instance}
           onChanged={() => void refreshDetail()}
-          onDeleted={() => {
-            void queryClient.invalidateQueries({
-              queryKey: ["sandbox-instances"],
-            });
-            navigate({ to: "/sandbox-instances" });
-          }}
+          onDeleted={goBack}
         />
       }
       cards={[
@@ -246,7 +241,7 @@ export function SandboxInstanceDetailPage({
       defaultTabKey="access"
       activeTabKey={tab}
       onTabChange={(key) => onTabChange(key as SandboxInstanceDetailTabKey)}
-      onBack={() => navigate({ to: "/sandbox-instances" })}
+      onBack={goBack}
     />
   );
 }

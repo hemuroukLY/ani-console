@@ -9,8 +9,8 @@ import {
 import { withId } from "@/lib/id";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useCallback, useState } from "react";
 
 import { ExpandFilesystemModal } from "@/components/storage/ExpandFilesystemModal";
@@ -21,8 +21,7 @@ import { FilesystemMountTargets } from "./FilesystemMountTargets";
 type Filesystem = StorageFilesystem;
 
 export function FilesystemDetailPage({ filesystemId }: { filesystemId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("filesystem");
   const [expandVisible, setExpandVisible] = useState(false);
   const [mountCount, setMountCount] = useState(0);
   const handleMountCountChange = useCallback((count: number) => setMountCount(count), []);
@@ -47,10 +46,7 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
       },
     },
     mutationFn: (_: undefined) => deleteFilesystem(filesystemId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["filesystems"] });
-      navigate({ to: "/filesystems" });
-    },
+    onSuccess: goBack,
   });
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
@@ -152,7 +148,7 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
           //   ),
           // },
         ]}
-        onBack={() => navigate({ to: "/filesystems" })}
+        onBack={goBack}
       />
       {expandVisible && (
         <ExpandFilesystemModal filesystem={filesystem} onCancel={() => setExpandVisible(false)} />

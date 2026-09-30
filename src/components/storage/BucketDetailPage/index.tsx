@@ -1,5 +1,5 @@
 import { AliIcon, DetailPageFrame, DetailPagePlaceholder, ResourceId } from "@/components/common";
-import { useNavigate } from "@tanstack/react-router";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Dropdown, Menu, Tag } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
@@ -24,7 +24,7 @@ export function BucketDetailPage({
   bucketId: string;
   tab?: "objects" | "permissions" | "lifecycle" | "access" | "overview";
 }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("bucket");
   const [storageClassVisible, setStorageClassVisible] = useState(false);
 
   const bucket = useQuery({
@@ -124,7 +124,7 @@ export function BucketDetailPage({
             content: <BucketAccess bucket={bucketInfo} />,
           },
         ]}
-        onBack={() => navigate({ to: "/objects" })}
+        onBack={goBack}
       />
       {storageClassVisible && (
         <BucketStorageClassModal

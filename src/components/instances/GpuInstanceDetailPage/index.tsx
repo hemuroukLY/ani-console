@@ -2,7 +2,7 @@ import { withId } from "@/lib/id";
 import { getInstance, type InstanceRecord } from "@/api/instances";
 import { Empty, Space, Tooltip } from "@arco-design/web-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import {
   AliIcon,
   DetailPageFrame,
@@ -45,7 +45,7 @@ export function GpuInstanceDetailPage({
   tab: GpuInstanceDetailTabKey;
   onTabChange: (tab: GpuInstanceDetailTabKey) => void;
 }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("gpu-instance");
   const queryClient = useQueryClient();
   const detail = useQuery({
     meta: {
@@ -192,12 +192,7 @@ export function GpuInstanceDetailPage({
             instance={instance}
             display="detail"
             onChanged={refreshInstance}
-            onDeleted={() => {
-              void queryClient.invalidateQueries({
-                queryKey: ["gpu-instances"],
-              });
-              navigate({ to: "/gpu-instances" });
-            }}
+            onDeleted={goBack}
           />
         </Space>
       }
@@ -358,7 +353,7 @@ export function GpuInstanceDetailPage({
       defaultTabKey="release"
       activeTabKey={tab}
       onTabChange={(key) => onTabChange(key as GpuInstanceDetailTabKey)}
-      onBack={() => navigate({ to: "/gpu-instances" })}
+      onBack={goBack}
     />
   );
 }

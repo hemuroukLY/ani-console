@@ -1,5 +1,5 @@
 import { withId } from "@/lib/id";
-import { useNavigate } from "@tanstack/react-router";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Modal, Space } from "@arco-design/web-react";
 import {
@@ -22,7 +22,7 @@ import { openExternalUrl } from "@/lib/browser";
 import { formatBytes, formatDateTime } from "@/lib/format";
 
 export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; objectId: string }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("object", bucketId);
   const qc = useQueryClient();
   const detail = useQuery({
     meta: {
@@ -68,11 +68,7 @@ export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; obj
       },
     },
     mutationFn: (_: undefined) => deleteStorageObject(objectId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["buckets"] });
-      qc.invalidateQueries({ queryKey: ["bucket-objects", bucketId] });
-      navigate({ to: "/objects/$bucketId", params: { bucketId } });
-    },
+    onSuccess: goBack,
   });
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
@@ -143,7 +139,7 @@ export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; obj
           ],
         },
       ]}
-      onBack={() => navigate({ to: "/objects/$bucketId", params: { bucketId } })}
+      onBack={goBack}
     />
   );
 }

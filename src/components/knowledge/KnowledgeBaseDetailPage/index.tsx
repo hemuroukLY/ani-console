@@ -1,6 +1,6 @@
 import { withId } from "@/lib/id";
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 
@@ -35,8 +35,7 @@ export function KnowledgeBaseDetailPage({
   kbId: string;
   tab: KnowledgeBaseDetailTabKey;
 }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("knowledge-base");
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -69,10 +68,7 @@ export function KnowledgeBaseDetailPage({
       },
     },
     mutationFn: () => deleteKnowledgeBase(kbId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["knowledge-bases"] });
-      navigate({ to: "/kb" });
-    },
+    onSuccess: goBack,
   });
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
   const kb = detail.data;
@@ -186,7 +182,7 @@ export function KnowledgeBaseDetailPage({
         },
       ]}
       defaultTabKey={tab}
-      onBack={() => navigate({ to: "/kb" })}
+      onBack={goBack}
     />
   );
 }

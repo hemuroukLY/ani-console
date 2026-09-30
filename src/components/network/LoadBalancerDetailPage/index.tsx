@@ -6,8 +6,8 @@ import {
   ResourceId,
   StatusBadge,
 } from "@/components/common";
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import {
@@ -32,8 +32,7 @@ type Vpc = NetworkVPC;
 type Subnet = NetworkSubnet;
 
 export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("load-balancer");
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -79,10 +78,7 @@ export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: str
       },
     },
     mutationFn: (_: undefined) => deleteNetworkLoadBalancer(loadBalancerId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["network-load-balancers"] });
-      navigate({ to: "/load-balancers" });
-    },
+    onSuccess: goBack,
   });
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
   const item = detail.data as LoadBalancer;
@@ -202,7 +198,7 @@ export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: str
           content: <LoadBalancerEvents />,
         },
       ]}
-      onBack={() => navigate({ to: "/load-balancers" })}
+      onBack={goBack}
     />
   );
 }

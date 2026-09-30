@@ -6,8 +6,8 @@ import {
   ResourceId,
   StatusBadge,
 } from "@/components/common";
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import { deleteNetworkVpc, getNetworkVpc, type NetworkVPC } from "@/api/network";
@@ -21,8 +21,7 @@ import { VpcSubnets } from "./VpcSubnets";
 type Vpc = NetworkVPC;
 
 export function VpcDetailPage({ vpcId }: { vpcId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("vpc");
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -44,10 +43,7 @@ export function VpcDetailPage({ vpcId }: { vpcId: string }) {
       },
     },
     mutationFn: () => deleteNetworkVpc(vpcId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["network-vpcs"] });
-      navigate({ to: "/vpcs" });
-    },
+    onSuccess: goBack,
   });
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
@@ -118,7 +114,7 @@ export function VpcDetailPage({ vpcId }: { vpcId: string }) {
           content: <VpcRelatedResources vpcId={vpcId} />,
         },
       ]}
-      onBack={() => navigate({ to: "/vpcs" })}
+      onBack={goBack}
     />
   );
 }

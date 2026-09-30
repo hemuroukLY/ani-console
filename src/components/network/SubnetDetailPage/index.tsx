@@ -15,8 +15,8 @@ import {
 import { withId } from "@/lib/id";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 
 import { formatDateTime } from "@/lib/format";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
@@ -27,8 +27,7 @@ import { SubnetRelatedResources } from "./SubnetRelatedResources";
 import { SubnetRoutes } from "./SubnetRoutes";
 
 export function SubnetDetailPage({ subnetId }: { subnetId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("subnet");
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -62,10 +61,7 @@ export function SubnetDetailPage({ subnetId }: { subnetId: string }) {
       },
     },
     mutationFn: () => deleteNetworkSubnet(subnetId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["network-subnets"] });
-      navigate({ to: "/subnets" });
-    },
+    onSuccess: goBack,
   });
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
@@ -137,7 +133,7 @@ export function SubnetDetailPage({ subnetId }: { subnetId: string }) {
           content: <SubnetRelatedResources subnetId={subnetId} />,
         },
       ]}
-      onBack={() => navigate({ to: "/subnets" })}
+      onBack={goBack}
     />
   );
 }

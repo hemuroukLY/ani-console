@@ -41,10 +41,12 @@ const BUSY_STATES = new Set<VmInstance["state"]>([
 export function VmInstanceActions({
   instance,
   onOperationSubmitted,
+  onDeleted,
   display = "row",
 }: {
   instance: VmInstance;
   onOperationSubmitted: (operationId: string) => void;
+  onDeleted?: () => void;
   display?: "row" | "detail";
 }) {
   const [modalAction, setModalAction] = useState<ModalAction>();
@@ -289,7 +291,8 @@ export function VmInstanceActions({
           onCancel={() => setDeleteVisible(false)}
           onSubmitted={(operationId) => {
             setDeleteVisible(false);
-            onOperationSubmitted(operationId);
+            if (onDeleted) onDeleted();
+            else onOperationSubmitted(operationId);
           }}
         />
       )}

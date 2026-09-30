@@ -6,8 +6,8 @@ import {
   ResourceId,
   StatusBadge,
 } from "@/components/common";
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import {
@@ -27,8 +27,7 @@ type SecurityGroup = NetworkSecurityGroup;
 type Vpc = NetworkVPC;
 
 export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("security-group");
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -62,10 +61,7 @@ export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: 
       },
     },
     mutationFn: () => deleteNetworkSecurityGroup(securityGroupId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["network-security-groups"] });
-      navigate({ to: "/security-groups" });
-    },
+    onSuccess: goBack,
   });
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
@@ -162,7 +158,7 @@ export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: 
             ),
           },
         ]}
-        onBack={() => navigate({ to: "/security-groups" })}
+        onBack={goBack}
       />
     </>
   );

@@ -2,7 +2,6 @@ import { withId } from "@/lib/id";
 import { getInstance, type InstanceRecord } from "@/api/instances";
 import { Empty, Tooltip } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import {
   AliIcon,
   DetailPageFrame,
@@ -17,6 +16,7 @@ import { InstanceMetrics } from "@/components/instances/InstanceMetrics";
 import { InstanceOperations } from "@/components/instances/InstanceOperations";
 import { InstanceStorage } from "@/components/instances/InstanceStorage";
 import { VmInstanceActions } from "@/components/instances/VmInstanceActions";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
@@ -57,7 +57,7 @@ export function VmInstanceDetailPage({
   tab: ComputeInstanceDetailTabKey;
   onTabChange: (tab: ComputeInstanceDetailTabKey) => void;
 }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("vm-instance");
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -177,6 +177,7 @@ export function VmInstanceDetailPage({
             instance={instance}
             display="detail"
             onOperationSubmitted={refreshDetail}
+            onDeleted={goBack}
           />
         }
         cards={[
@@ -281,7 +282,7 @@ export function VmInstanceDetailPage({
         defaultTabKey="ssh"
         activeTabKey={tab}
         onTabChange={(key) => onTabChange(key as ComputeInstanceDetailTabKey)}
-        onBack={() => navigate({ to: "/vm-instances" })}
+        onBack={goBack}
       />
     </>
   );

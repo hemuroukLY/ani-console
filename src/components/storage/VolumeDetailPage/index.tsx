@@ -10,8 +10,8 @@ import { withId } from "@/lib/id";
 import { VOLUME_MODE_LABELS } from "@/lib/volumes";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useState } from "react";
 
 import { ExpandVolumeModal } from "@/components/storage/ExpandVolumeModal";
@@ -26,8 +26,7 @@ import { VolumeSnapshots } from "./VolumeSnapshots";
 type Volume = StorageVolume;
 
 export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("volume");
   const [expandVisible, setExpandVisible] = useState(false);
   const [initGuideVisible, setInitGuideVisible] = useState(false);
   const detail = useQuery({
@@ -51,10 +50,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
       },
     },
     mutationFn: (_: undefined) => removeVolume(volumeId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["volumes"] });
-      navigate({ to: "/volumes" });
-    },
+    onSuccess: goBack,
   });
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
@@ -199,7 +195,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
           },
           */
         ]}
-        onBack={() => navigate({ to: "/volumes" })}
+        onBack={goBack}
       />
       {expandVisible && (
         <ExpandVolumeModal volume={volume} onCancel={() => setExpandVisible(false)} />

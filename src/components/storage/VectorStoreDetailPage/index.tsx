@@ -8,7 +8,7 @@ import { withId } from "@/lib/id";
 import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 
 import {
   AliIcon,
@@ -31,7 +31,7 @@ export function VectorStoreDetailPage({
   vectorStoreId: string;
   tab?: VectorStoreDetailTabKey;
 }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("vector-store");
   const qc = useQueryClient();
   const detail = useQuery({
     meta: {
@@ -54,10 +54,7 @@ export function VectorStoreDetailPage({
       },
     },
     mutationFn: (_: undefined) => deleteVectorStore(vectorStoreId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["vector-stores"] });
-      navigate({ to: "/vector-stores" });
-    },
+    onSuccess: goBack,
   });
   const rebuildIndex = useMutation({
     meta: {
@@ -192,7 +189,7 @@ export function VectorStoreDetailPage({
         */
       ]}
       defaultTabKey={tab}
-      onBack={() => navigate({ to: "/vector-stores" })}
+      onBack={goBack}
     />
   );
 }

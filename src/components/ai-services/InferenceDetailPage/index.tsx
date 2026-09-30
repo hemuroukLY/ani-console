@@ -15,7 +15,7 @@ import {
 } from "@arco-design/web-react";
 import { IconMoreVertical } from "@arco-design/web-react/icon";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useState } from "react";
 
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
@@ -41,7 +41,7 @@ import { InferenceScaleModal } from "./InferenceScaleModal";
 type LifecycleAction = "start" | "stop" | "restart";
 
 export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("inference-service");
   const qc = useQueryClient();
   const [scaleVisible, setScaleVisible] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState("related");
@@ -102,10 +102,7 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
       },
     },
     mutationFn: () => deleteInferenceService(serviceId),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["inference-services"] });
-      navigate({ to: "/inference" });
-    },
+    onSuccess: goBack,
   });
 
   if (!service.data) {
@@ -341,7 +338,7 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
         ]}
         activeTabKey={activeTabKey}
         onTabChange={setActiveTabKey}
-        onBack={() => navigate({ to: "/inference" })}
+        onBack={goBack}
       />
       {scaleVisible && (
         <InferenceScaleModal

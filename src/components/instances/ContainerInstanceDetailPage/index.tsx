@@ -1,7 +1,7 @@
 import { withId } from "@/lib/id";
 import type { InstanceRecord } from "@/api/instances";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import {
   AliIcon,
   DetailPageFrame,
@@ -37,7 +37,7 @@ export function ContainerInstanceDetailPage({
   tab: ContainerInstanceDetailTabKey;
   onTabChange: (tab: ContainerInstanceDetailTabKey) => void;
 }) {
-  const navigate = useNavigate();
+  const goBack = useBackOrFallback("container-instance");
   const qc = useQueryClient();
 
   const query = useQuery({
@@ -82,10 +82,7 @@ export function ContainerInstanceDetailPage({
             void query.refetch();
             void qc.invalidateQueries({ queryKey: ["container-instances"] });
           }}
-          onDeleted={() => {
-            void qc.invalidateQueries({ queryKey: ["container-instances"] });
-            navigate({ to: "/container-instances" });
-          }}
+          onDeleted={goBack}
         />
       }
       cards={[
@@ -188,7 +185,7 @@ export function ContainerInstanceDetailPage({
       defaultTabKey="release"
       activeTabKey={tab}
       onTabChange={(key) => onTabChange(key as ContainerInstanceDetailTabKey)}
-      onBack={() => navigate({ to: "/container-instances" })}
+      onBack={goBack}
     />
   );
 }

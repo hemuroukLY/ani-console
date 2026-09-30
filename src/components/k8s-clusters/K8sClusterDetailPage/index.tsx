@@ -9,8 +9,8 @@ import {
 import { formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
 import { Button, Modal } from "@arco-design/web-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useCallback, useState } from "react";
 
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
@@ -20,8 +20,7 @@ import { K8sNodePools } from "./K8sNodePools";
 import { K8sWorkloads } from "./K8sWorkloads";
 
 export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
-  const navigate = useNavigate();
-  const qc = useQueryClient();
+  const goBack = useBackOrFallback("k8s-cluster");
   const [nodeCount, setNodeCount] = useState(0);
   const handleNodeCountChange = useCallback((count: number) => setNodeCount(count), []);
   const detail = useQuery({
@@ -45,10 +44,7 @@ export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
       },
     },
     mutationFn: () => deleteK8sCluster(clusterId),
-    onSuccess: () => {
-      navigate({ to: "/k8s-clusters" });
-      void qc.invalidateQueries({ queryKey: ["k8s-clusters"] });
-    },
+    onSuccess: goBack,
   });
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
@@ -122,7 +118,7 @@ export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
         },
         { key: "events", label: "事件", content: <K8sEvents /> },
       ]}
-      onBack={() => navigate({ to: "/k8s-clusters" })}
+      onBack={goBack}
     />
   );
 }
