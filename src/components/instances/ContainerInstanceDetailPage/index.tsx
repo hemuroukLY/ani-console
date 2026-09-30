@@ -23,11 +23,7 @@ import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
-import {
-  getInstanceDisplayIp,
-  getInstanceNetworkValue,
-  type ContainerInstanceDetailTabKey,
-} from "@/lib/instances";
+import { getInstanceDisplayIp, getInstanceNetworkValue } from "@/lib/instances";
 import { containerDetailDataSource } from "./data-source";
 
 export function ContainerInstanceDetailPage({
@@ -36,8 +32,8 @@ export function ContainerInstanceDetailPage({
   onTabChange,
 }: {
   instanceId: string;
-  tab: ContainerInstanceDetailTabKey;
-  onTabChange: (tab: ContainerInstanceDetailTabKey) => void;
+  tab?: string;
+  onTabChange: (tab: string) => void;
 }) {
   const goBack = useBackOrFallback("container-instance");
   const qc = useQueryClient();
@@ -200,9 +196,9 @@ export function ContainerInstanceDetailPage({
             content: <InstanceOperations instanceId={instanceId} />,
           },
         ]}
-        defaultTabKey="release"
+
         activeTabKey={tab}
-        onTabChange={(key) => onTabChange(key as ContainerInstanceDetailTabKey)}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
       {dialogNode}

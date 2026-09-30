@@ -88,6 +88,7 @@ export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
           ),
         },
       ]}
+
       onBack={goBack}
     />
   );

@@ -1,19 +1,13 @@
 import { createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ContainerInstanceDetailPage } from "@/components/instances/ContainerInstanceDetailPage";
-import {
-  containerInstanceDetailTabKeys,
-  type ContainerInstanceDetailTabKey,
-} from "@/lib/instances";
 
 export const Route = createFileRoute("/_authenticated/container-instances/$instanceId")({
-  validateSearch: (search: Record<string, unknown>): { tab?: ContainerInstanceDetailTabKey } => ({
-    tab: containerInstanceDetailTabKeys.includes(search.tab as ContainerInstanceDetailTabKey)
-      ? (search.tab as ContainerInstanceDetailTabKey)
-      : undefined,
+  validateSearch: (search: Record<string, unknown>): { tab?: string } => ({
+    tab: typeof search.tab === "string" ? search.tab : undefined,
   }),
   component: function ContainerInstanceDetailRoute() {
     const { instanceId } = Route.useParams();
-    const { tab = "release" } = Route.useSearch();
+    const { tab } = Route.useSearch();
     const navigate = useNavigate({ from: Route.fullPath });
     const pathname = useRouterState({ select: (state) => state.location.pathname });
     if (pathname !== `/container-instances/${instanceId}`) return null;

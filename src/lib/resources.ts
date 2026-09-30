@@ -20,11 +20,11 @@ export type ResourceDetailType =
   | "vector-store";
 
 export type KnowledgeBaseDetailSearch = {
-  tab: "overview" | "documents" | "chat" | "permissions" | "history";
+  tab: string;
 };
 
 export type VectorStoreDetailSearch = {
-  tab: "search" | "related" | undefined;
+  tab: string | undefined;
 };
 
 export type ResourceDetailSearch = KnowledgeBaseDetailSearch | VectorStoreDetailSearch;

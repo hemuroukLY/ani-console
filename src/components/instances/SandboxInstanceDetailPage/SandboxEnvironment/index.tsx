@@ -13,8 +13,8 @@ export function SandboxEnvironment({ sandbox }: { sandbox: SandboxStatus }) {
   return (
     <Space direction="vertical" size={24} className="w-full">
       <section>
-        <Typography.Title heading={6}>环境变量</Typography.Title>
         <DataTable<SandboxEnv>
+          header={{ title: "环境变量" }}
           data={env}
           rowKey="name"
           pagination={false}
@@ -40,7 +40,9 @@ export function SandboxEnvironment({ sandbox }: { sandbox: SandboxStatus }) {
         />
       </section>
       <section>
-        <Typography.Title heading={6}>出口控制</Typography.Title>
+        <Typography.Title heading={6} className="mt-0! mb-3!">
+          出口控制
+        </Typography.Title>
         <Descriptions
           column={1}
           labelStyle={{ width: "120px" }}

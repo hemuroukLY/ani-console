@@ -59,10 +59,8 @@ export function VectorStoreRelatedResources({ store }: { store: VectorStore }) {
 
   return (
     <Space direction="vertical" size={12} className="w-full">
-      <Alert type="info" showIcon title="删除向量存储前需解除知识库关联" />
       <section>
         <DataTable<RelatedResource>
-          header={{ title: "关联资源" }}
           data={resources}
           rowKey="id"
           pagination={false}
@@ -78,7 +76,7 @@ export function VectorStoreRelatedResources({ store }: { store: VectorStore }) {
                     navigateToResourceDetail(navigate, {
                       type: "knowledge-base",
                       id: resource.id,
-                      search: { tab: "overview" },
+                      search: { tab: "documents" },
                     })
                   }
                 >

@@ -85,8 +85,8 @@ export function InstanceConfiguration({
   return (
     <Space direction="vertical" size={24} className="w-full">
       <section>
-        <Typography.Title heading={6}>环境变量</Typography.Title>
         <DataTable<InstanceEnvVar>
+          header={{ title: "环境变量" }}
           data={environmentVariables}
           rowKey="name"
           pagination={false}

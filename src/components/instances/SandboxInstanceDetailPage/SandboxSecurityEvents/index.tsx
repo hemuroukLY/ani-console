@@ -1,6 +1,6 @@
 import { withId } from "@/lib/id";
 import { listInstanceSecurityEvents, type InstanceSecurityEvent } from "@/api/instances";
-import { Empty, Select, Space, Tag, Typography } from "@arco-design/web-react";
+import { Empty, Select, Space, Tag } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { DataTable } from "@/components/common";
@@ -31,8 +31,7 @@ export function SandboxSecurityEvents({ instanceId }: { instanceId: string }) {
   return (
     <Space direction="vertical" size={24} className="w-full">
       <section>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <Typography.Title heading={6}>安全事件</Typography.Title>
+        <div className="mb-3 flex items-center justify-end gap-3">
           <Space>
             <span className="text-app-text-secondary">级别</span>
             <Select
@@ -49,6 +48,7 @@ export function SandboxSecurityEvents({ instanceId }: { instanceId: string }) {
           </Space>
         </div>
         <DataTable<SecurityEvent>
+          tableLabel="安全事件"
           data={query.data ?? []}
           loading={query.isLoading || query.isFetching}
           pagination={false}

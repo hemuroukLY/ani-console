@@ -42,7 +42,7 @@ export function RegistryPushInstructionsModal({
       onCancel={onCancel}
       style={{ width: 720 }}
     >
-      <Typography.Paragraph type="secondary">
+      <Typography.Paragraph type="secondary" className="mb-4!">
         镜像通过 docker push 入库，不支持网页上传。项目由平台按当前租户自动创建，Console
         不展示或下发凭据明文。
       </Typography.Paragraph>

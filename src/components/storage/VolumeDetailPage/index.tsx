@@ -25,7 +25,15 @@ import { VolumeSnapshots } from "./VolumeSnapshots";
 
 type Volume = StorageVolume;
 
-export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
+export function VolumeDetailPage({
+  volumeId,
+  tab,
+  onTabChange,
+}: {
+  volumeId: string;
+  tab?: string;
+  onTabChange: (tab: string) => void;
+}) {
   const goBack = useBackOrFallback("volume");
 
   const detail = useQuery({
@@ -151,6 +159,8 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
           },
           */
         ]}
+        activeTabKey={tab}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
       {dialogNode}

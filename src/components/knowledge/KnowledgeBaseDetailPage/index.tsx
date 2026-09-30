@@ -22,19 +22,14 @@ import { KnowledgeBaseAuditLogs } from "@/components/knowledge/KnowledgeBaseAudi
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
 
-export type KnowledgeBaseDetailTabKey =
-  | "overview"
-  | "documents"
-  | "chat"
-  | "permissions"
-  | "history";
-
 export function KnowledgeBaseDetailPage({
   kbId,
   tab,
+  onTabChange,
 }: {
   kbId: string;
-  tab: KnowledgeBaseDetailTabKey;
+  tab?: string;
+  onTabChange: (tab: string) => void;
 }) {
   const goBack = useBackOrFallback("knowledge-base");
   const detail = useQuery({
@@ -143,7 +138,9 @@ export function KnowledgeBaseDetailPage({
           content: <KnowledgeBaseAuditLogs kbId={kbId} />,
         },
       ]}
-      defaultTabKey={tab}
+
+      activeTabKey={tab}
+      onTabChange={onTabChange}
       onBack={goBack}
     />
   );

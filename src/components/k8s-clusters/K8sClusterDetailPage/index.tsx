@@ -22,7 +22,15 @@ import { K8sKubeconfig } from "./K8sKubeconfig";
 import { K8sNodePools } from "./K8sNodePools";
 import { K8sWorkloads } from "./K8sWorkloads";
 
-export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
+export function K8sClusterDetailPage({
+  clusterId,
+  tab,
+  onTabChange,
+}: {
+  clusterId: string;
+  tab?: string;
+  onTabChange: (tab: string) => void;
+}) {
   const goBack = useBackOrFallback("k8s-cluster");
   const [nodeCount, setNodeCount] = useState(0);
   const handleNodeCountChange = useCallback((count: number) => setNodeCount(count), []);
@@ -96,6 +104,8 @@ export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
         },
         { key: "events", label: "事件", content: <K8sEvents /> },
       ]}
+      activeTabKey={tab}
+      onTabChange={onTabChange}
       onBack={goBack}
     />
   );

@@ -24,7 +24,6 @@ export function BucketAccess({ bucket }: { bucket: StorageBucketRecord }) {
 
   return (
     <Space direction="vertical" size={20} className="w-full">
-      <Typography.Title heading={6}>访问域名</Typography.Title>
       <DataTable<AccessDomainRow>
         tableLabel="访问域名"
         rowKey="key"

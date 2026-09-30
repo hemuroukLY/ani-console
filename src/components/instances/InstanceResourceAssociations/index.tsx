@@ -1,5 +1,5 @@
 import type { InstanceRecord } from "@/api/instances";
-import { Empty, Space, Typography } from "@arco-design/web-react";
+import { Empty, Space } from "@arco-design/web-react";
 import { DataTable } from "@/components/common";
 import { getImageDisplayName } from "@/lib/render";
 
@@ -100,8 +100,8 @@ export function InstanceResourceAssociations({ instance }: { instance: Instance 
   return (
     <Space direction="vertical" size={24} className="w-full">
       <section>
-        <Typography.Title heading={6}>网络关联</Typography.Title>
         <DataTable
+          header={{ title: "网络关联" }}
           data={[
             {
               type: "VPC",
@@ -122,8 +122,8 @@ export function InstanceResourceAssociations({ instance }: { instance: Instance 
       </section>
 
       <section>
-        <Typography.Title heading={6}>镜像关联</Typography.Title>
         <DataTable<ImageRow>
+          header={{ title: "镜像关联" }}
           data={images}
           rowKey="key"
           pagination={false}
@@ -139,8 +139,8 @@ export function InstanceResourceAssociations({ instance }: { instance: Instance 
       </section>
 
       <section>
-        <Typography.Title heading={6}>存储关联</Typography.Title>
         <DataTable<StorageRow>
+          header={{ title: "存储关联" }}
           data={Array.from(storageAssociations.values())}
           rowKey="key"
           pagination={false}
@@ -153,8 +153,8 @@ export function InstanceResourceAssociations({ instance }: { instance: Instance 
       </section>
 
       <section>
-        <Typography.Title heading={6}>安全关联</Typography.Title>
         <DataTable<SecurityRow>
+          header={{ title: "安全关联" }}
           data={securityAssociations}
           rowKey="key"
           pagination={false}

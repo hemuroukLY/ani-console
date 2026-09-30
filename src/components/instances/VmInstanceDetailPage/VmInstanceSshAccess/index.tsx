@@ -42,8 +42,10 @@ export function VmInstanceSshAccess({
       />
       {command ? (
         <div>
-          <Typography.Title heading={6}>连接命令</Typography.Title>
-          <pre className="overflow-auto rounded bg-app--fillsecondary text-sm">{command}</pre>
+          <Typography.Title heading={6} className="mt-0! mb-3!">
+            连接命令
+          </Typography.Title>
+          <pre className="m-0 overflow-auto rounded bg-app--fillsecondary text-sm">{command}</pre>
         </div>
       ) : null}
       <Space>

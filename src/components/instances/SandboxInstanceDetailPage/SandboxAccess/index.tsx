@@ -97,15 +97,15 @@ export function SandboxAccess({
   return (
     <>
       <section>
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <Typography.Title heading={6}>预览端口</Typography.Title>
-          <Space>
-            <Button size="small" disabled={portDisabled} onClick={openPort}>
-              打开预览
-            </Button>
-          </Space>
-        </div>
         <DataTable<SandboxPortSummary>
+          header={{
+            title: "预览端口",
+            extra: (
+              <Button size="small" disabled={portDisabled} onClick={openPort}>
+                打开预览
+              </Button>
+            ),
+          }}
           data={sandbox.ports ?? []}
           rowKey={(item) => String(item.port)}
           pagination={false}
@@ -154,7 +154,9 @@ export function SandboxAccess({
       <Space direction="vertical" size={24} className="w-full">
         <section>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <Typography.Title heading={6}>短期连接令牌</Typography.Title>
+            <Typography.Title heading={6} className="m-0!">
+              短期连接令牌
+            </Typography.Title>
             <Button size="small" disabled={tokenDisabled} onClick={openToken}>
               签发令牌
             </Button>

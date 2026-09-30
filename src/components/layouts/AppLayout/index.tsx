@@ -107,7 +107,7 @@ export function PageHeader({
     <header className="mb-5">
       <Space align="start" className="w-full justify-between">
         <div className="min-w-0">
-          <Typography.Title heading={5} className="!m-0 !text-[20px] !font-semibold">
+          <Typography.Title heading={5} className="m-0! text-[20px]! font-semibold!">
             {title}
           </Typography.Title>
           {subtitle ? (

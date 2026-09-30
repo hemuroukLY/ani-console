@@ -9,7 +9,7 @@ import { DetailPageHeader } from "./DetailPageHeader";
 import styles from "./index.module.css";
 import type { DetailBreadcrumbItem, DetailCard, DetailHeaderItems, DetailTab } from "./types";
 
-type DetailPageFrameProps = {
+type DetailPageFrameProps<TKey extends string> = {
   breadcrumbs: DetailBreadcrumbItem[];
   title: ReactNode;
   status?: ReactNode;
@@ -17,15 +17,14 @@ type DetailPageFrameProps = {
   headerItems: DetailHeaderItems;
   actions?: ReactNode;
   cards: DetailCard[];
-  tabs?: DetailTab[];
   onBack?: () => void;
   leftWidth?: number;
-  defaultTabKey?: string;
-  activeTabKey?: string;
-  onTabChange?: (key: string) => void;
-};
+} & (
+  | { tabs: DetailTab<TKey>[]; activeTabKey?: TKey; onTabChange?: (key: TKey) => void }
+  | { tabs?: undefined; activeTabKey?: never; onTabChange?: never }
+);
 
-export function DetailPageFrame({
+export function DetailPageFrame<TKey extends string>({
   breadcrumbs,
   title,
   status,
@@ -36,11 +35,12 @@ export function DetailPageFrame({
   tabs,
   onBack,
   leftWidth = 320,
-  defaultTabKey,
   activeTabKey,
   onTabChange,
-}: DetailPageFrameProps) {
-  const hasTabs = Boolean(tabs?.length);
+}: DetailPageFrameProps<TKey>) {
+  // 缺失或无效的选中项统一回退到首个 Tab，不保存第二份选中状态。
+  const activeTab = tabs?.find((tab) => tab.key === activeTabKey) ?? tabs?.[0];
+  const hasTabs = Boolean(activeTab);
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const workspaceStyle = { ["--detail-left-width" as string]: `${leftWidth}px` } as CSSProperties;
 
@@ -79,11 +79,10 @@ export function DetailPageFrame({
           </Tooltip>
         ) : null}
 
-        {hasTabs ? (
+        {activeTab ? (
           <DetailContentTabs
             tabs={tabs ?? []}
-            defaultTabKey={defaultTabKey}
-            activeTabKey={activeTabKey}
+            activeTabKey={activeTab.key}
             onTabChange={onTabChange}
           />
         ) : null}

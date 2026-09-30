@@ -1,34 +1,19 @@
 import { Tabs } from "@arco-design/web-react";
-import { useEffect, useState } from "react";
 import styles from "./index.module.css";
 import type { DetailTab } from "../types";
 
-type DetailContentTabsProps = {
-  tabs: DetailTab[];
-  defaultTabKey?: string;
-  activeTabKey?: string;
-  onTabChange?: (key: string) => void;
+type DetailContentTabsProps<TKey extends string> = {
+  tabs: DetailTab<TKey>[];
+  activeTabKey: TKey;
+  onTabChange?: (key: TKey) => void;
 };
 
-export function DetailContentTabs({
+export function DetailContentTabs<TKey extends string>({
   tabs,
-  defaultTabKey,
-  activeTabKey: controlledActiveTabKey,
+  activeTabKey,
   onTabChange,
-}: DetailContentTabsProps) {
-  const [internalActiveTabKey, setInternalActiveTabKey] = useState(
-    defaultTabKey ?? tabs[0]?.key ?? "",
-  );
-  const activeTabKey = controlledActiveTabKey ?? internalActiveTabKey;
-
-  useEffect(() => {
-    if (!tabs.length) return;
-    if (!tabs.some((tab) => tab.key === activeTabKey)) {
-      setInternalActiveTabKey(defaultTabKey ?? tabs[0].key);
-    }
-  }, [activeTabKey, defaultTabKey, tabs]);
-
-  const activeTab = tabs.find((tab) => tab.key === activeTabKey) ?? tabs[0];
+}: DetailContentTabsProps<TKey>) {
+  const activeTab = tabs.find((tab) => tab.key === activeTabKey);
 
   return (
     <section className={styles.rightPane}>
@@ -37,10 +22,10 @@ export function DetailContentTabs({
         type="line"
         headerPadding={false}
         inkBarSize={{ width: 16 }}
-        activeTab={activeTab?.key}
+        activeTab={activeTabKey}
         onChange={(key) => {
-          if (controlledActiveTabKey === undefined) setInternalActiveTabKey(key);
-          onTabChange?.(key);
+          const nextTab = tabs.find((tab) => tab.key === key);
+          if (nextTab) onTabChange?.(nextTab.key);
         }}
         extra={activeTab?.extra}
         overflow="scroll"

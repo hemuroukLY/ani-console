@@ -27,7 +27,15 @@ import { ModelRelatedResources } from "./ModelRelatedResources";
 import { ModelOperationHistory } from "./ModelOperationHistory";
 // import { ModelRecommendedConfiguration } from "./ModelRecommendedConfiguration";
 
-export function ModelDetailPage({ modelId }: { modelId: string }) {
+export function ModelDetailPage({
+  modelId,
+  tab,
+  onTabChange,
+}: {
+  modelId: string;
+  tab?: string;
+  onTabChange: (tab: string) => void;
+}) {
   const goBack = useBackOrFallback("model");
 
   const model = useQuery({
@@ -111,6 +119,8 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
             content: <ModelOperationHistory />,
           },
         ]}
+        activeTabKey={tab}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
       {dialogNode}

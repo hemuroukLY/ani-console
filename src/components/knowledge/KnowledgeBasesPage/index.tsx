@@ -61,7 +61,7 @@ export function KnowledgeBasesPage() {
           name={item.name}
           id={item.id}
           type="knowledge-base"
-          search={{ tab: "overview" }}
+          search={{ tab: "documents" }}
         />
       ),
     },

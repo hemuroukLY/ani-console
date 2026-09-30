@@ -1,10 +1,19 @@
 import { BucketDetailPage } from "@/components/storage/BucketDetailPage";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/objects/$bucketId/")({
   component: function BucketDetailRoute() {
     const { bucketId } = Route.useParams();
     const { tab } = Route.useSearch();
-    return <BucketDetailPage bucketId={bucketId} tab={tab} />;
+    const navigate = useNavigate({ from: Route.fullPath });
+    return (
+      <BucketDetailPage
+        bucketId={bucketId}
+        tab={tab}
+        onTabChange={(nextTab) =>
+          navigate({ search: (current) => ({ ...current, tab: nextTab }), replace: true })
+        }
+      />
+    );
   },
 });

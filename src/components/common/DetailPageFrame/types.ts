@@ -26,8 +26,8 @@ export type DetailCard = {
   defaultCollapsed?: boolean;
 };
 
-export type DetailTab = {
-  key: string;
+export type DetailTab<TKey extends string = string> = {
+  key: TKey;
   label: ReactNode;
   content: ReactNode;
   extra?: ReactNode;

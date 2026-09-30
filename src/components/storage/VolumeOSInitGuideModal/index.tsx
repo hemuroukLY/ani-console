@@ -66,7 +66,7 @@ export function VolumeOSInitGuideModal({
           {guide.data.steps.length ? (
             guide.data.steps.map((step, index) => (
               <div key={`${index}-${step.title}`}>
-                <Typography.Title heading={6}>
+                <Typography.Title heading={6} className="mt-0! mb-3!">
                   {index + 1}. {step.title}
                 </Typography.Title>
                 <pre

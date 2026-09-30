@@ -21,7 +21,7 @@ import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
-import { openVmInstanceRemoteWindow, type ComputeInstanceDetailTabKey } from "@/lib/instances";
+import { openVmInstanceRemoteWindow } from "@/lib/instances";
 import { VmInstanceSnapshots } from "./VmInstanceSnapshots";
 import { VmInstanceSshAccess } from "./VmInstanceSshAccess";
 
@@ -55,8 +55,8 @@ export function VmInstanceDetailPage({
   onTabChange,
 }: {
   instanceId: string;
-  tab: ComputeInstanceDetailTabKey;
-  onTabChange: (tab: ComputeInstanceDetailTabKey) => void;
+  tab?: string;
+  onTabChange: (tab: string) => void;
 }) {
   const goBack = useBackOrFallback("vm-instance");
   const detail = useQuery({
@@ -302,9 +302,9 @@ export function VmInstanceDetailPage({
             content: <InstanceOperations instanceId={instance.id} />,
           },
         ]}
-        defaultTabKey="ssh"
+
         activeTabKey={tab}
-        onTabChange={(key) => onTabChange(key as ComputeInstanceDetailTabKey)}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
       {dialogNode}

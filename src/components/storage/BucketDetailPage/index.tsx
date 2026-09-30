@@ -21,9 +21,11 @@ type Bucket = StorageBucketRecord;
 export function BucketDetailPage({
   bucketId,
   tab,
+  onTabChange,
 }: {
   bucketId: string;
-  tab?: "objects" | "permissions" | "lifecycle" | "access" | "overview";
+  tab?: string;
+  onTabChange: (tab: string) => void;
 }) {
   const goBack = useBackOrFallback("bucket");
 
@@ -83,7 +85,7 @@ export function BucketDetailPage({
             ],
           },
         ]}
-        defaultTabKey={tab}
+
         tabs={[
           {
             key: "objects",
@@ -106,6 +108,8 @@ export function BucketDetailPage({
             content: <BucketAccess bucket={bucketInfo} />,
           },
         ]}
+        activeTabKey={tab}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
       {dialogNode}

@@ -1,7 +1,7 @@
 import { useVolumeDetach } from "@/hooks/useVolumeDetach";
 
 import type { StorageVolume } from "@/api/storage/volumes";
-import { DataTable, StatusBadge, type RowAction } from "@/components/common";
+import { DataTable, ResourceNameId, StatusBadge, type RowAction } from "@/components/common";
 
 import { Button, Empty } from "@arco-design/web-react";
 
@@ -42,8 +42,12 @@ export function VolumeRelatedResources({
             extra: items.length === 0 ? <Button onClick={onAttach}>挂载</Button> : undefined,
           }}
           columns={[
-            { title: "实例名称", dataIndex: "instance_name" },
-            { title: "实例 ID", dataIndex: "instance_id" },
+            {
+              title: "实例名称 / ID",
+              render: (_, item) => (
+                <ResourceNameId name={item.instance_name} id={item.instance_id} openable={false} />
+              ),
+            },
             { title: "实例类型", dataIndex: "kind", placeholder: "-" },
             { title: "状态", render: (_, item) => <StatusBadge status={item.state} /> },
           ]}

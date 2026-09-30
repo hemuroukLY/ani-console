@@ -18,7 +18,6 @@ import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
-import type { GpuInstanceDetailTabKey } from "@/lib/instances";
 import { InstanceConfiguration } from "@/components/instances/InstanceConfiguration";
 import { InstanceEvents } from "@/components/instances/InstanceEvents";
 import { InstanceMetrics } from "@/components/instances/InstanceMetrics";
@@ -43,8 +42,8 @@ export function GpuInstanceDetailPage({
   onTabChange,
 }: {
   instanceId: string;
-  tab: GpuInstanceDetailTabKey;
-  onTabChange: (tab: GpuInstanceDetailTabKey) => void;
+  tab?: string;
+  onTabChange: (tab: string) => void;
 }) {
   const goBack = useBackOrFallback("gpu-instance");
   const queryClient = useQueryClient();
@@ -376,9 +375,9 @@ export function GpuInstanceDetailPage({
             content: <InstanceOperations instanceId={instance.id} />,
           },
         ]}
-        defaultTabKey="release"
+
         activeTabKey={tab}
-        onTabChange={(key) => onTabChange(key as GpuInstanceDetailTabKey)}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
       {dialogNode}

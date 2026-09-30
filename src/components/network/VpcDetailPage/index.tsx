@@ -22,7 +22,15 @@ import { VpcSubnets } from "./VpcSubnets";
 
 type Vpc = NetworkVPC;
 
-export function VpcDetailPage({ vpcId }: { vpcId: string }) {
+export function VpcDetailPage({
+  vpcId,
+  tab,
+  onTabChange,
+}: {
+  vpcId: string;
+  tab?: string;
+  onTabChange: (tab: string) => void;
+}) {
   const goBack = useBackOrFallback("vpc");
   const detail = useQuery({
     meta: {
@@ -78,6 +86,8 @@ export function VpcDetailPage({ vpcId }: { vpcId: string }) {
           content: <VpcRelatedResources vpcId={vpcId} />,
         },
       ]}
+      activeTabKey={tab}
+      onTabChange={onTabChange}
       onBack={goBack}
     />
   );

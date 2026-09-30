@@ -116,7 +116,7 @@ export function VectorStoresPage() {
               navigateToResourceDetail(navigate, {
                 type: "knowledge-base",
                 id: knowledgeBase.id,
-                search: { tab: "overview" },
+                search: { tab: "documents" },
               })
             }
           >

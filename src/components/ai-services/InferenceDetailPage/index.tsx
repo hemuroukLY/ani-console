@@ -6,7 +6,6 @@ import { Link as ArcoLink, Button, Space, Typography } from "@arco-design/web-re
 
 import { useQuery } from "@tanstack/react-query";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useState } from "react";
 
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import {
@@ -27,10 +26,17 @@ import { InferenceMonitoring } from "./InferenceMonitoring";
 import { InferencePolicies } from "./InferencePolicies";
 import { InferenceRelatedResources } from "./InferenceRelatedResources";
 
-export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
+export function InferenceDetailPage({
+  serviceId,
+  tab,
+  onTabChange,
+}: {
+  serviceId: string;
+  tab?: string;
+  onTabChange: (tab: string) => void;
+}) {
   const goBack = useBackOrFallback("inference-service");
   const { actions, dialogNode } = useInferenceActions(goBack);
-  const [activeTabKey, setActiveTabKey] = useState("related");
 
   const service = useQuery({
     meta: {
@@ -152,7 +158,7 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
                     <Typography.Text type="secondary">·</Typography.Text>
                     <Typography.Text>并发 {item.max_concurrency ?? "-"}</Typography.Text>
                     <Typography.Text type="secondary">·</Typography.Text>
-                    <Button type="text" size="mini" onClick={() => setActiveTabKey("policies")}>
+                    <Button type="text" size="mini" onClick={() => onTabChange("policies")}>
                       配置
                     </Button>
                   </Space>
@@ -218,8 +224,8 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
             content: <InferenceEvents />,
           },
         ]}
-        activeTabKey={activeTabKey}
-        onTabChange={setActiveTabKey}
+        activeTabKey={tab}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
       {dialogNode}

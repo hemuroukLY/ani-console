@@ -17,19 +17,19 @@ export function FilesystemPermissionsTab() {
   return (
     <Space direction="vertical" size={20} className="w-full">
       <section>
-        <div className="mb-3 flex items-center justify-between gap-4">
-          <Typography.Title heading={6} className="m-0!">
-            访问规则
-          </Typography.Title>
-          <Tooltip content={unavailableReason}>
-            <span>
-              <Button type="primary" disabled>
-                添加规则
-              </Button>
-            </span>
-          </Tooltip>
-        </div>
         <DataTable<FilesystemAccessRule>
+          header={{
+            title: "访问规则",
+            extra: (
+              <Tooltip content={unavailableReason}>
+                <span>
+                  <Button type="primary" disabled>
+                    添加规则
+                  </Button>
+                </span>
+              </Tooltip>
+            ),
+          }}
           columns={[
             { title: "授权网段", dataIndex: "cidr" },
             { title: "读写权限", dataIndex: "access" },

@@ -19,14 +19,14 @@ import { VectorStoreWorkbench } from "@/components/storage/VectorStoreWorkbench"
 import { formatDateTime } from "@/lib/format";
 import { VectorStoreRelatedResources } from "./VectorStoreRelatedResources";
 
-export type VectorStoreDetailTabKey = "search" | "related";
-
 export function VectorStoreDetailPage({
   vectorStoreId,
   tab,
+  onTabChange,
 }: {
   vectorStoreId: string;
-  tab?: VectorStoreDetailTabKey;
+  tab?: string;
+  onTabChange: (tab: string) => void;
 }) {
   const goBack = useBackOrFallback("vector-store");
   const { actions } = useVectorStoreActions(goBack);
@@ -107,7 +107,9 @@ export function VectorStoreDetailPage({
         },
         */
       ]}
-      defaultTabKey={tab}
+
+      activeTabKey={tab}
+      onTabChange={onTabChange}
       onBack={goBack}
     />
   );

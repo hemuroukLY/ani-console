@@ -27,7 +27,15 @@ import { SecurityGroupRules } from "./SecurityGroupRules";
 type SecurityGroup = NetworkSecurityGroup;
 type Vpc = NetworkVPC;
 
-export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: string }) {
+export function SecurityGroupDetailPage({
+  securityGroupId,
+  tab,
+  onTabChange,
+}: {
+  securityGroupId: string;
+  tab?: string;
+  onTabChange: (tab: string) => void;
+}) {
   const goBack = useBackOrFallback("security-group");
   const detail = useQuery({
     meta: {
@@ -120,6 +128,8 @@ export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: 
             ),
           },
         ]}
+        activeTabKey={tab}
+        onTabChange={onTabChange}
         onBack={goBack}
       />
     </>

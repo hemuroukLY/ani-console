@@ -63,7 +63,7 @@ export function GpuInstanceResizeFields({
 
   return (
     <>
-      <Typography.Paragraph className="mb-4">
+      <Typography.Paragraph className="mb-4!">
         当前 <StatusBadge status={instance.state} reason={instance.reason} /> ·{" "}
         <Typography.Text bold>
           {currentGpuLabel} · {currentCpuSpec}
@@ -83,7 +83,7 @@ export function GpuInstanceResizeFields({
         placeholder="请选择 CPU / 内存"
         options={cpuOptions}
       />
-      <Typography.Paragraph type="secondary" className="mb-0">
+      <Typography.Paragraph type="secondary" className="mb-0!">
         提交后写入生命周期任务，实例保持已停止；启动后按新规格调度。
       </Typography.Paragraph>
     </>

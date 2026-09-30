@@ -57,19 +57,6 @@ export const DEFAULT_GPU_INSTANCE_COMPUTE_SPEC = GPU_INSTANCE_COMPUTE_SPECS[0].v
 
 export const INSTANCE_COMPUTE_SPEC_BY_VALUE = INSTANCE_COMPUTE_SPEC_CATALOG;
 
-export const computeInstanceDetailTabKeys = [
-  "ssh",
-  "storage",
-  "snapshots",
-  "resources",
-  "monitoring",
-  "logs",
-  "events",
-  "operations",
-] as const;
-
-export type ComputeInstanceDetailTabKey = (typeof computeInstanceDetailTabKeys)[number];
-
 export function openVmInstanceRemoteWindow(instanceId: string) {
   const remoteWindow = window.open(
     `/vm-instances/${encodeURIComponent(instanceId)}/vnc`,
@@ -105,47 +92,6 @@ export function openSandboxInstanceTerminalWindow(instanceId: string) {
   );
   remoteWindow?.focus();
 }
-
-export const containerInstanceDetailTabKeys = [
-  "release",
-  "configuration",
-  "storage",
-  "network",
-  "monitoring",
-  "logs",
-  "events",
-  "operations",
-] as const;
-
-export type ContainerInstanceDetailTabKey = (typeof containerInstanceDetailTabKeys)[number];
-
-export const gpuInstanceDetailTabKeys = [
-  "release",
-  "configuration",
-  "storage",
-  "network",
-  "monitoring",
-  "gpu-metrics",
-  "logs",
-  "events",
-  "operations",
-] as const;
-
-export type GpuInstanceDetailTabKey = (typeof gpuInstanceDetailTabKeys)[number];
-
-export const sandboxInstanceDetailTabKeys = [
-  "access",
-  "env",
-  "code",
-  "files",
-  "checkpoints",
-  "metrics",
-  "logs",
-  "events",
-  "operations",
-] as const;
-
-export type SandboxInstanceDetailTabKey = (typeof sandboxInstanceDetailTabKeys)[number];
 
 type NetworkishRecord = Record<string, unknown>;
 

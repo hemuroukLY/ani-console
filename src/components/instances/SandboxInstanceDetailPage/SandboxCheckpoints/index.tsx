@@ -6,7 +6,7 @@ import {
 import { DataTable, StatusBadge, type RowAction } from "@/components/common";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
-import { Button, Empty, Space, Typography, Modal } from "@arco-design/web-react";
+import { Button, Empty, Space, Modal } from "@arco-design/web-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { SandboxCheckpointCloneModal } from "@/components/instances/SandboxCheckpointCloneModal";
@@ -106,8 +106,7 @@ export function SandboxCheckpoints({
     <>
       <Space direction="vertical" size={24} className="w-full">
         <section>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <Typography.Title heading={6}>检查点</Typography.Title>
+          <div className="mb-3 flex items-center justify-end gap-3">
             <Space>
               <Button
                 size="small"
@@ -123,6 +122,7 @@ export function SandboxCheckpoints({
           </div>
 
           <DataTable<SandboxCheckpoint>
+            tableLabel="检查点"
             data={checkpoints.data?.items ?? []}
             rowKey="id"
             loading={checkpoints.isLoading || checkpoints.isFetching}

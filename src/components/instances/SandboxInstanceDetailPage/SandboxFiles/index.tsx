@@ -1,15 +1,6 @@
 import { withId } from "@/lib/id";
 import { listSandboxFiles, type SandboxFile, deleteSandboxFile } from "@/api/instances";
-import {
-  Button,
-  Empty,
-  Input,
-  Space,
-  Tag,
-  Tooltip,
-  Typography,
-  Modal,
-} from "@arco-design/web-react";
+import { Button, Empty, Input, Space, Tag, Tooltip, Modal } from "@arco-design/web-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { DataTable, type RowAction } from "@/components/common";
@@ -113,7 +104,6 @@ export function SandboxFiles({
     <>
       <Space direction="vertical" size={24} className="w-full">
         <section>
-          <Typography.Title heading={6}>工作区文件</Typography.Title>
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Input
               className="min-w-60 flex-1"
@@ -142,6 +132,7 @@ export function SandboxFiles({
           </div>
 
           <DataTable<SandboxFile>
+            tableLabel="工作区文件"
             data={files.data?.items ?? []}
             rowKey="path"
             loading={files.isLoading || files.isFetching}

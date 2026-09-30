@@ -77,7 +77,9 @@ export function SandboxCodeRunner({
   return (
     <Space direction="vertical" className="w-full">
       <section>
-        <Typography.Title heading={6}>代码</Typography.Title>
+        <Typography.Title heading={6} className="mt-0! mb-3!">
+          代码
+        </Typography.Title>
         <Form layout="vertical">
           <div className="grid gap-4 lg:grid-cols-[180px_180px_minmax(0,1fr)]">
             <Form.Item label="语言" required>
@@ -132,7 +134,9 @@ export function SandboxCodeRunner({
       </section>
 
       <section>
-        <Typography.Title heading={6}>最近结果</Typography.Title>
+        <Typography.Title heading={6} className="mt-0! mb-3!">
+          最近结果
+        </Typography.Title>
         {lastRun ? (
           <div className="space-y-4">
             <Descriptions
@@ -167,7 +171,9 @@ export function SandboxCodeRunner({
 
       {runs.length > 1 ? (
         <section>
-          <Typography.Title heading={6}>本页运行历史</Typography.Title>
+          <Typography.Title heading={6} className="mt-0! mb-3!">
+            本页运行历史
+          </Typography.Title>
           <div className="space-y-2">
             {runs.map((run) => (
               <div

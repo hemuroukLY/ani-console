@@ -136,7 +136,7 @@ export function SandboxInstanceCreateForm({ visible, submitting, onCancel, onSub
           >
             {step === 0 ? (
               <>
-                <Typography.Paragraph type="secondary">
+                <Typography.Paragraph type="secondary" className="mb-4!">
                   为沙箱设置易于识别的名称。
                 </Typography.Paragraph>
                 <Form.Item

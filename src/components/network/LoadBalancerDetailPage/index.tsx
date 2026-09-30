@@ -32,7 +32,15 @@ type LoadBalancer = NetworkLoadBalancer;
 type Vpc = NetworkVPC;
 type Subnet = NetworkSubnet;
 
-export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: string }) {
+export function LoadBalancerDetailPage({
+  loadBalancerId,
+  tab,
+  onTabChange,
+}: {
+  loadBalancerId: string;
+  tab?: string;
+  onTabChange: (tab: string) => void;
+}) {
   const goBack = useBackOrFallback("load-balancer");
   const detail = useQuery({
     meta: {
@@ -160,6 +168,8 @@ export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: str
           content: <LoadBalancerEvents />,
         },
       ]}
+      activeTabKey={tab}
+      onTabChange={onTabChange}
       onBack={goBack}
     />
   );

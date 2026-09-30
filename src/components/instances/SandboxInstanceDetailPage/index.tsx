@@ -17,7 +17,7 @@ import { InstanceOperations } from "@/components/instances/InstanceOperations";
 import { SandboxInstanceActions } from "@/components/instances/SandboxInstanceActions";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatBytes, formatDateTime } from "@/lib/format";
-import { getSandboxProviderLabel, type SandboxInstanceDetailTabKey } from "@/lib/instances";
+import { getSandboxProviderLabel } from "@/lib/instances";
 import { SandboxAccess } from "./SandboxAccess";
 import { SandboxCheckpoints } from "./SandboxCheckpoints";
 import { SandboxCodeRunner } from "./SandboxCodeRunner";
@@ -32,8 +32,8 @@ export function SandboxInstanceDetailPage({
   onTabChange,
 }: {
   instanceId: string;
-  tab: SandboxInstanceDetailTabKey;
-  onTabChange: (tab: SandboxInstanceDetailTabKey) => void;
+  tab?: string;
+  onTabChange: (tab: string) => void;
 }) {
   const goBack = useBackOrFallback("sandbox-instance");
   const queryClient = useQueryClient();
@@ -238,9 +238,9 @@ export function SandboxInstanceDetailPage({
           content: <InstanceOperations instanceId={instanceId} />,
         },
       ]}
-      defaultTabKey="access"
+
       activeTabKey={tab}
-      onTabChange={(key) => onTabChange(key as SandboxInstanceDetailTabKey)}
+      onTabChange={onTabChange}
       onBack={goBack}
     />
   );
