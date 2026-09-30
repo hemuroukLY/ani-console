@@ -12,6 +12,7 @@ import { validateForm } from "@/lib/form";
 
 type CreateKnowledgeBaseFormValues = CreateKnowledgeBaseInput & {
   embedding_model: string;
+  default_inference_service: string;
   chunk_size: number;
   top_k: number;
 };
@@ -39,7 +40,6 @@ export function CreateKnowledgeBaseModal({
         ...values,
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
-        default_inference_service: values.default_inference_service || undefined,
       };
       return createKnowledgeBase(submitData);
     },
@@ -52,7 +52,7 @@ export function CreateKnowledgeBaseModal({
   });
   const modelExtra = (
     <>
-      未指定时使用服务端默认模型，
+      用于知识库问答生成回答。
       <Link to="/inference" target="_blank" rel="noopener noreferrer">
         打开推理服务
       </Link>
@@ -106,8 +106,13 @@ export function CreateKnowledgeBaseModal({
         >
           <KnowledgeModelSelect capability="embedding" required />
         </Form.Item>
-        <Form.Item label="推理模型" field="default_inference_service" extra={modelExtra}>
-          <KnowledgeModelSelect capability="text-generation" />
+        <Form.Item
+          label="推理模型"
+          field="default_inference_service"
+          rules={[{ required: true, message: "请选择推理模型" }]}
+          extra={modelExtra}
+        >
+          <KnowledgeModelSelect capability="text-generation" required />
         </Form.Item>
         <div className="grid grid-cols-2 gap-4">
           <Form.Item label="分块大小" field="chunk_size" rules={[{ required: true }]}>

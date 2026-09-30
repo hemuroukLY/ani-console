@@ -348,6 +348,8 @@ export function InstanceMetrics({
                 <div className="px-3 py-2">
                   <Statistic
                     title="网络入 / 出"
+                    className="w-full"
+                    styleValue={{ whiteSpace: "normal", overflowWrap: "anywhere" }}
                     value={`${formatBytes(
                       data.network_rx_bytes ?? undefined,
                     )} / ${formatBytes(data.network_tx_bytes ?? undefined)}`}

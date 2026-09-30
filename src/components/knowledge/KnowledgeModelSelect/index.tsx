@@ -60,7 +60,13 @@ export function KnowledgeModelSelect({
         }}
         loading={models.isFetching}
         allowClear={!required}
-        placeholder={required ? "请选择向量化模型" : "使用服务端默认模型"}
+        placeholder={
+          required
+            ? capability === "embedding"
+              ? "请选择向量化模型"
+              : "请选择推理模型"
+            : "使用服务端默认模型"
+        }
         showSearch
         options={options}
         filterOption={(input, option) =>
@@ -69,7 +75,11 @@ export function KnowledgeModelSelect({
       />
       {models.isSuccess && options.length === 0 ? (
         <Typography.Text type="secondary">
-          {required ? "暂无可用模型，请先部署向量化服务。" : "暂无可选模型，将使用服务端默认模型。"}
+          {required
+            ? capability === "embedding"
+              ? "暂无可用模型，请先部署向量化服务。"
+              : "暂无可用模型，请先部署文本生成推理服务。"
+            : "暂无可选模型，将使用服务端默认模型。"}
         </Typography.Text>
       ) : null}
     </Space>

@@ -189,7 +189,7 @@ export function TopNav({
               <Button
                 type="text"
                 className="topnav-primary-item topnav-region"
-                style={{ cursor: "pointer" }}
+                style={{ cursor: "pointer", color: "var(--color-text-1)" }}
                 aria-label={`选择区域，当前区域：${MOCK_REGION.label}`}
                 aria-haspopup="menu"
                 aria-expanded={regionMenuVisible}
