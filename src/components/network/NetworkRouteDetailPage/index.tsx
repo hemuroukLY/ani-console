@@ -1,15 +1,11 @@
+import { useNetworkRouteActions } from "@/hooks/useNetworkRouteActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
 import { withId } from "@/lib/id";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import {
-  deleteNetworkRoute,
-  getNetworkRoute,
-  getNetworkVpc,
-  type NetworkRoute,
-  type NetworkVPC,
-} from "@/api/network";
+import { useQuery } from "@tanstack/react-query";
+
+import { getNetworkRoute, getNetworkVpc, type NetworkRoute, type NetworkVPC } from "@/api/network";
 
 import { AliIcon, DetailPageFrame, DetailPagePlaceholder, ResourceId } from "@/components/common";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
@@ -41,18 +37,7 @@ export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
     queryFn: () => getNetworkVpc(detail.data!.vpc_id),
     enabled: Boolean(detail.data?.vpc_id),
   });
-  const deleteRoute = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "route-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (_: undefined) => deleteNetworkRoute(routeId),
-    onSuccess: goBack,
-  });
+  const { actions } = useNetworkRouteActions(goBack);
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
   const item = detail.data as NetworkRoute;
@@ -64,35 +49,7 @@ export function NetworkRouteDetailPage({ routeId }: { routeId: string }) {
       title={name}
       icon={<AliIcon name="VPCluyouqi" size={28} />}
       headerItems={[{ label: "目标网段", value: item.destination_cidr }]}
-      actions={
-        <Dropdown
-          trigger="click"
-          position="br"
-          droplist={
-            <Menu>
-              <Menu.Item
-                key="delete"
-                disabled={deleteRoute.isPending}
-                style={{ color: "var(--color-danger-6)" }}
-                onClick={() =>
-                  Modal.confirm({
-                    title: "删除路由",
-                    content: `确定删除「${name}」？删除后该转发规则将立即失效。`,
-                    okButtonProps: { status: "danger" },
-                    onOk: () => deleteRoute.mutateAsync(undefined),
-                  })
-                }
-              >
-                删除
-              </Menu.Item>
-            </Menu>
-          }
-        >
-          <Button disabled={deleteRoute.isPending} aria-label="更多操作" title="更多操作">
-            <IconMoreVertical />
-          </Button>
-        </Dropdown>
-      }
+      actions={<ResourceActionMenu record={item} actions={actions} />}
       cards={[
         {
           key: "basic",

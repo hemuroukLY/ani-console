@@ -1,4 +1,7 @@
-import { deleteK8sCluster, getK8sCluster } from "@/api/k8s-clusters";
+import { useK8sClusterActions } from "@/hooks/useK8sClusterActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
+import { getK8sCluster } from "@/api/k8s-clusters";
 import {
   AliIcon,
   DetailPageFrame,
@@ -8,8 +11,8 @@ import {
 } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
-import { Button, Modal } from "@arco-design/web-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+
+import { useQuery } from "@tanstack/react-query";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useCallback, useState } from "react";
 
@@ -34,18 +37,7 @@ export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
     queryKey: ["k8s-cluster", clusterId],
     queryFn: () => getK8sCluster(clusterId),
   });
-  const deleteCluster = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "k8s-cluster-delete",
-        action: "删除",
-        errorFallback: "操作失败",
-      },
-    },
-    mutationFn: () => deleteK8sCluster(clusterId),
-    onSuccess: goBack,
-  });
+  const { actions } = useK8sClusterActions(goBack);
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
@@ -65,21 +57,7 @@ export function K8sClusterDetailPage({ clusterId }: { clusterId: string }) {
         { label: "K8s 版本", value: cluster.version ?? "-" },
         { label: "节点数", value: String(nodeCount) },
       ]}
-      actions={
-        <Button
-          type="outline"
-          status="danger"
-          onClick={() =>
-            void Modal.confirm({
-              title: "删除集群",
-              content: `确定删除「${cluster.name ?? clusterId}」？此操作不可恢复。`,
-              onOk: () => deleteCluster.mutateAsync(),
-            })
-          }
-        >
-          删除
-        </Button>
-      }
+      actions={<ResourceActionMenu record={cluster} actions={actions} />}
       cards={[
         {
           key: "basic",

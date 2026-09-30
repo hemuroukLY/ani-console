@@ -1,14 +1,10 @@
+import { useObjectActions } from "@/hooks/useObjectActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
 import { withId } from "@/lib/id";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Modal, Space } from "@arco-design/web-react";
-import {
-  completeStorageObjectUpload,
-  deleteStorageObject,
-  getStorageObject,
-  getStorageObjectDownload,
-  type StorageObject,
-} from "@/api/storage/objects";
+import { useQuery } from "@tanstack/react-query";
+
+import { getStorageObject, type StorageObject } from "@/api/storage/objects";
 
 import {
   AliIcon,
@@ -18,12 +14,12 @@ import {
   StatusBadge,
 } from "@/components/common";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
-import { openExternalUrl } from "@/lib/browser";
+
 import { formatBytes, formatDateTime } from "@/lib/format";
 
 export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; objectId: string }) {
   const goBack = useBackOrFallback("object", bucketId);
-  const qc = useQueryClient();
+
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -35,42 +31,7 @@ export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; obj
     queryKey: ["object", objectId],
     queryFn: () => getStorageObject(objectId),
   });
-  const completeUpload = useMutation({
-    meta: { feedback: { channel: "message", action: "上传", errorFallback: "请求失败" } },
-    mutationFn: (_: undefined) => completeStorageObjectUpload(objectId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["object", objectId] });
-      qc.invalidateQueries({ queryKey: ["bucket-objects", bucketId] });
-      qc.invalidateQueries({ queryKey: ["buckets"] });
-    },
-  });
-  const downloadObject = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "object-download",
-        action: "操作",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async (_: undefined) => {
-      const data = await getStorageObjectDownload(objectId);
-      if (data?.download_url) openExternalUrl(data.download_url);
-    },
-  });
-  const deleteObject = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "object-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (_: undefined) => deleteStorageObject(objectId),
-    onSuccess: goBack,
-  });
-
+  const { actions } = useObjectActions(bucketId, goBack);
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
   const object = detail.data as StorageObject;
@@ -91,39 +52,7 @@ export function ObjectDetailPage({ bucketId, objectId }: { bucketId: string; obj
       status={objectStatus}
       icon={<AliIcon name="file" size={28} />}
       headerItems={[{ label: "大小", value: formatBytes(object.size_bytes) }]}
-      actions={
-        <Space wrap>
-          {object.state === "pending" ? (
-            <Button
-              type="primary"
-              loading={completeUpload.isPending}
-              onClick={() => completeUpload.mutateAsync(undefined)}
-            >
-              确认上传完成
-            </Button>
-          ) : null}
-          <Button
-            loading={downloadObject.isPending}
-            disabled={object.state === "pending"}
-            onClick={() => downloadObject.mutateAsync(undefined)}
-          >
-            下载
-          </Button>
-          <Button
-            status="danger"
-            onClick={() =>
-              Modal.confirm({
-                title: "删除对象",
-                content: `确定删除对象「${object.key}」？`,
-                okButtonProps: { status: "danger" },
-                onOk: () => deleteObject.mutateAsync(undefined),
-              })
-            }
-          >
-            删除
-          </Button>
-        </Space>
-      }
+      actions={<ResourceActionMenu record={object} actions={actions} />}
       cards={[
         {
           key: "basic",

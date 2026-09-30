@@ -1,3 +1,6 @@
+import { useSecurityGroupActions } from "@/hooks/useSecurityGroupActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
 import { withId } from "@/lib/id";
 import {
   DetailPageFrame,
@@ -7,11 +10,9 @@ import {
   StatusBadge,
 } from "@/components/common";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
+import { useQuery } from "@tanstack/react-query";
+
 import {
-  deleteNetworkSecurityGroup,
   getNetworkSecurityGroup,
   getNetworkVpc,
   type NetworkSecurityGroup,
@@ -51,18 +52,7 @@ export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: 
     queryFn: () => getNetworkVpc(detail.data!.vpc_id!),
     enabled: Boolean(detail.data?.vpc_id),
   });
-  const deleteSecurityGroup = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "security-group-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: () => deleteNetworkSecurityGroup(securityGroupId),
-    onSuccess: goBack,
-  });
+  const { actions } = useSecurityGroupActions(goBack);
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
@@ -84,35 +74,7 @@ export function SecurityGroupDetailPage({ securityGroupId }: { securityGroupId: 
             value: parentVpc?.name ?? securityGroup.vpc_id ?? "-",
           },
         ]}
-        actions={
-          <Dropdown
-            trigger="click"
-            position="br"
-            droplist={
-              <Menu>
-                <Menu.Item
-                  key="delete"
-                  disabled={deleteSecurityGroup.isPending}
-                  style={{ color: "var(--color-danger-6)" }}
-                  onClick={() =>
-                    Modal.confirm({
-                      title: "删除安全组",
-                      content: `确定删除「${securityGroup.name}」？安全组被实例使用时无法删除，请先解除关联。`,
-                      okButtonProps: { status: "danger" },
-                      onOk: () => deleteSecurityGroup.mutateAsync(),
-                    })
-                  }
-                >
-                  删除
-                </Menu.Item>
-              </Menu>
-            }
-          >
-            <Button disabled={deleteSecurityGroup.isPending} aria-label="更多操作" title="更多操作">
-              <IconMoreVertical />
-            </Button>
-          </Dropdown>
-        }
+        actions={<ResourceActionMenu record={securityGroup} actions={actions} />}
         cards={[
           {
             key: "basic",

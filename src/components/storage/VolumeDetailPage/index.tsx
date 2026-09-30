@@ -1,4 +1,7 @@
-import { getVolume, deleteVolume as removeVolume, type StorageVolume } from "@/api/storage/volumes";
+import { useVolumeActions } from "@/hooks/useVolumeActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
+import { getVolume, type StorageVolume } from "@/api/storage/volumes";
 import {
   AliIcon,
   DetailPageFrame,
@@ -8,15 +11,12 @@ import {
 } from "@/components/common";
 import { withId } from "@/lib/id";
 import { VOLUME_MODE_LABELS } from "@/lib/volumes";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useState } from "react";
 
-import { ExpandVolumeModal } from "@/components/storage/ExpandVolumeModal";
+import { useQuery } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
+
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
-import { VolumeOSInitGuideModal } from "@/components/storage/VolumeOSInitGuideModal";
+
 import { formatDateTime } from "@/lib/format";
 import { VolumeAutoSnapshot } from "@/components/storage/VolumeAutoSnapshot";
 import { VolumeMountHistory } from "./VolumeMountHistory";
@@ -27,8 +27,7 @@ type Volume = StorageVolume;
 
 export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
   const goBack = useBackOrFallback("volume");
-  const [expandVisible, setExpandVisible] = useState(false);
-  const [initGuideVisible, setInitGuideVisible] = useState(false);
+
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -40,18 +39,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
     queryKey: ["volume", volumeId],
     queryFn: () => getVolume(volumeId),
   });
-  const deleteVolume = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "volume-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (_: undefined) => removeVolume(volumeId),
-    onSuccess: goBack,
-  });
+  const { actions, dialogNode, openAttach, openSnapshot } = useVolumeActions(goBack);
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
   const volume = detail.data as Volume;
@@ -69,37 +57,6 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
     ? `${autoSnapshot.enabled ? "开" : "关"} · 保留 ${autoSnapshot.retain_days} 天`
     : "-";
   const osInitStatus = volume.os_init_status === "n_a" ? "n/a" : volume.os_init_status || "-";
-  const handleMoreAction = (action: string) => {
-    if (action === "expand") {
-      setExpandVisible(true);
-      return;
-    }
-    if (action === "os-init") {
-      setInitGuideVisible(true);
-      return;
-    }
-    if (action === "delete") {
-      Modal.confirm({
-        title: "删除块存储卷",
-        content: `确定删除「${volume.name}」？卷被实例挂载时无法删除。`,
-        okButtonProps: { status: "danger" },
-        onOk: () => deleteVolume.mutateAsync(undefined),
-      });
-    }
-  };
-  const moreMenu = (
-    <Menu onClickMenuItem={handleMoreAction}>
-      <Menu.Item key="expand">扩容</Menu.Item>
-      <Menu.Item key="os-init">初始化引导</Menu.Item>
-      <Menu.Item
-        key="delete"
-        disabled={deleteVolume.isPending}
-        style={{ color: "var(--color-danger-6)" }}
-      >
-        删除
-      </Menu.Item>
-    </Menu>
-  );
 
   return (
     <>
@@ -109,13 +66,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
         status={volumeStatus}
         icon={<AliIcon name="kuaicunchu" size={28} />}
         headerItems={[{ label: "容量 (GiB)", value: String(volume.size_gib) }]}
-        actions={
-          <Dropdown trigger="click" position="br" droplist={moreMenu}>
-            <Button disabled={deleteVolume.isPending} aria-label="更多操作" title="更多操作">
-              <IconMoreVertical />
-            </Button>
-          </Dropdown>
-        }
+        actions={<ResourceActionMenu record={volume} actions={actions} />}
         cards={[
           {
             key: "basic",
@@ -166,12 +117,17 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
           {
             key: "related",
             label: "关联资源",
-            content: <VolumeRelatedResources volume={volume} />,
+            content: <VolumeRelatedResources volume={volume} onAttach={() => openAttach(volume)} />,
           },
           {
             key: "snapshots",
             label: "快照",
-            content: <VolumeSnapshots volumeId={volumeId} />,
+            content: (
+              <VolumeSnapshots
+                volumeId={volumeId}
+                onCreateSnapshot={() => openSnapshot(volumeId)}
+              />
+            ),
           },
           {
             key: "auto-snapshot",
@@ -197,12 +153,7 @@ export function VolumeDetailPage({ volumeId }: { volumeId: string }) {
         ]}
         onBack={goBack}
       />
-      {expandVisible && (
-        <ExpandVolumeModal volume={volume} onCancel={() => setExpandVisible(false)} />
-      )}
-      {initGuideVisible && (
-        <VolumeOSInitGuideModal volumeId={volumeId} onCancel={() => setInitGuideVisible(false)} />
-      )}
+      {dialogNode}
     </>
   );
 }

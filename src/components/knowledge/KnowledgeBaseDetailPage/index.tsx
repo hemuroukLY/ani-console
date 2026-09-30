@@ -1,10 +1,11 @@
+import { useKnowledgeBaseActions } from "@/hooks/useKnowledgeBaseActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
 import { withId } from "@/lib/id";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
+import { useQuery } from "@tanstack/react-query";
 
-import { deleteKnowledgeBase, getKnowledgeBase } from "@/api/knowledge";
+import { getKnowledgeBase } from "@/api/knowledge";
 import { listVectorStores, type VectorStore } from "@/api/storage/vector-stores";
 import {
   AliIcon,
@@ -58,18 +59,7 @@ export function KnowledgeBaseDetailPage({
     queryKey: ["vector-stores", "knowledge-base", kbId],
     queryFn: () => listVectorStores({ limit: 100 }),
   });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "knowledge-base-delete",
-        action: "删除知识库",
-        errorFallback: "删除知识库失败",
-      },
-    },
-    mutationFn: () => deleteKnowledgeBase(kbId),
-    onSuccess: goBack,
-  });
+  const { actions } = useKnowledgeBaseActions(goBack);
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
   const kb = detail.data;
   const relatedVectorStore = (vectorStores.data?.items ?? []).find(
@@ -82,35 +72,7 @@ export function KnowledgeBaseDetailPage({
       status={<StatusBadge status={kb.status} />}
       icon={<AliIcon name="zhishiku" size={28} />}
       headerItems={[{ label: "文档数", value: String(kb.doc_count ?? 0) }]}
-      actions={
-        <Dropdown
-          trigger="click"
-          position="br"
-          droplist={
-            <Menu>
-              <Menu.Item
-                key="delete"
-                disabled={remove.isPending}
-                style={{ color: "var(--color-danger-6)" }}
-                onClick={() =>
-                  Modal.confirm({
-                    title: "删除知识库",
-                    content: `确定删除「${kb.name}」？知识库及其文档将不可恢复。`,
-                    okButtonProps: { status: "danger" },
-                    onOk: () => remove.mutateAsync(),
-                  })
-                }
-              >
-                删除
-              </Menu.Item>
-            </Menu>
-          }
-        >
-          <Button disabled={remove.isPending} aria-label="更多操作" title="更多操作">
-            <IconMoreVertical />
-          </Button>
-        </Dropdown>
-      }
+      actions={<ResourceActionMenu record={kb} actions={actions} />}
       cards={[
         {
           key: "basic",

@@ -1,12 +1,13 @@
-import { withId } from "@/lib/id";
-import { Button, Dropdown, Menu, Modal, Space } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useState } from "react";
-import { deleteModel, getModel } from "@/api/ai-services/models";
+import { useModelActions } from "@/hooks/useModelActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
 
-import { CreateInferenceServiceModal } from "@/components/ai-services/CreateInferenceServiceModal";
+import { withId } from "@/lib/id";
+
+import { useQuery } from "@tanstack/react-query";
+import { useBackOrFallback } from "@/hooks/useBackOrFallback";
+
+import { getModel } from "@/api/ai-services/models";
+
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import {
   AliIcon,
@@ -28,7 +29,7 @@ import { ModelOperationHistory } from "./ModelOperationHistory";
 
 export function ModelDetailPage({ modelId }: { modelId: string }) {
   const goBack = useBackOrFallback("model");
-  const [deployVisible, setDeployVisible] = useState(false);
+
   const model = useQuery({
     meta: {
       errorNotification: {
@@ -40,19 +41,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
     queryKey: ["model", modelId],
     queryFn: () => getModel(modelId),
   });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "model-delete",
-        action: "删除模型",
-        successText: "模型已删除",
-        errorFallback: "删除模型失败",
-      },
-    },
-    mutationFn: () => deleteModel(modelId),
-    onSuccess: goBack,
-  });
+  const { actions, dialogNode } = useModelActions(goBack);
 
   if (!model.data) {
     return <DetailPagePlaceholder loading={model.isLoading} />;
@@ -60,6 +49,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
 
   const item = model.data;
   const latestVersion = getLatestModelVersion(item);
+
   const detailCards: DetailCard[] = [
     {
       key: "basic",
@@ -101,45 +91,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
           { label: "最新版本", value: latestVersion?.version ?? "-" },
           { label: "更新时间", value: formatDateTime(item.updated_at) },
         ]}
-        actions={
-          <Space wrap>
-            <Button
-              type="primary"
-              disabled={item.status !== "ready" || !latestVersion}
-              onClick={() => setDeployVisible(true)}
-            >
-              部署
-            </Button>
-            <Dropdown
-              trigger="click"
-              position="br"
-              droplist={
-                <Menu>
-                  <Menu.Item
-                    key="delete"
-                    disabled={remove.isPending}
-                    style={{ color: "var(--color-danger-6)" }}
-                    onClick={() =>
-                      Modal.confirm({
-                        title: "删除模型",
-                        content:
-                          "确定删除「" + item.name + "」？有关联推理服务时后端可能拒绝删除。",
-                        okButtonProps: { status: "danger" },
-                        onOk: () => remove.mutateAsync(),
-                      })
-                    }
-                  >
-                    删除
-                  </Menu.Item>
-                </Menu>
-              }
-            >
-              <Button disabled={remove.isPending} aria-label="更多操作" title="更多操作">
-                <IconMoreVertical />
-              </Button>
-            </Dropdown>
-          </Space>
-        }
+        actions={<ResourceActionMenu record={item} actions={actions} />}
         cards={detailCards}
         tabs={[
           {
@@ -161,14 +113,7 @@ export function ModelDetailPage({ modelId }: { modelId: string }) {
         ]}
         onBack={goBack}
       />
-      {deployVisible && (
-        <CreateInferenceServiceModal
-          initialServiceName={("infer-" + item.name).slice(0, 63)}
-          initialModelId={item.id}
-          initialModelVersionId={latestVersion?.id}
-          onCancel={() => setDeployVisible(false)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

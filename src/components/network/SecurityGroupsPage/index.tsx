@@ -1,10 +1,10 @@
+import { useSecurityGroupActions } from "@/hooks/useSecurityGroupActions";
+
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Modal, Select } from "@arco-design/web-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, Select } from "@arco-design/web-react";
 import { useMemo, useState } from "react";
 import {
-  copyNetworkSecurityGroup,
-  deleteNetworkSecurityGroup,
   listNetworkSecurityGroups,
   listNetworkVpcs,
   type NetworkSecurityGroup,
@@ -76,36 +76,10 @@ export function SecurityGroupsPage() {
   });
 
   const qc = useQueryClient();
-  const deleteSecurityGroup = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "security-group-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: SecurityGroup) => deleteNetworkSecurityGroup(item.id),
-    onSuccess: () => {
-      resetPagination();
-      qc.invalidateQueries({ queryKey: ["network-security-groups"] });
-    },
-  });
-  const copySecurityGroup = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "security-group-copy",
-        action: "操作",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: SecurityGroup) => copyNetworkSecurityGroup(item),
-    onSuccess: () => {
-      resetPagination();
-      qc.invalidateQueries({ queryKey: ["network-security-groups"] });
-    },
-  });
+  const { actions } = useSecurityGroupActions(() => {
+    resetPagination();
+    qc.invalidateQueries({ queryKey: ["network-security-groups"] });
+  }, resetPagination);
 
   const items = useMemo(
     () => (securityGroups.data?.items ?? []) as SecurityGroup[],
@@ -251,26 +225,7 @@ export function SecurityGroupsPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "copy",
-              label: "复制",
-              loading: () => copySecurityGroup.isPending,
-              onClick: (item) => copySecurityGroup.mutate(item),
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除安全组",
-                  content: `确定删除「${item.name}」？安全组被实例使用时无法删除，请先解除关联。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => deleteSecurityGroup.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={securityGroups.isFetching || vpcs.isFetching}
           emptyIconClassName="icon-anquanzu"
           emptyText={

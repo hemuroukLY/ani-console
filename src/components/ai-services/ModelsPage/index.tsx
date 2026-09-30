@@ -1,9 +1,10 @@
-import { Modal, Select, Space, Tag } from "@arco-design/web-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { deleteModel, listModels } from "@/api/ai-services/models";
+import { useModelActions } from "@/hooks/useModelActions";
 
-import { CreateInferenceServiceModal } from "@/components/ai-services/CreateInferenceServiceModal";
+import { Select, Space, Tag } from "@arco-design/web-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { listModels } from "@/api/ai-services/models";
+
 import { ImportModelModal } from "@/components/ai-services/ImportModelModal";
 import {
   ResourceNameId,
@@ -31,7 +32,7 @@ function getApiStatus(status: StatusFilter) {
 
 export function ModelsPage() {
   const qc = useQueryClient();
-  const [deployModel, setDeployModel] = useState<Model | null>(null);
+
   const [importVisible, setImportVisible] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("all");
   const [searchField, setSearchField] = useState<SearchField>("name");
@@ -77,23 +78,9 @@ export function ModelsPage() {
   const items = models.data?.items ?? [];
   const paginationTotal = models.data?.total ?? items.length;
 
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "model-delete",
-        action: "删除模型",
-        errorFallback: "删除模型失败",
-      },
-    },
-    mutationFn: async (item: Model) => {
-      await deleteModel(item.id);
-      return item;
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["models"] });
-      refresh();
-    },
+  const { actions, dialogNode } = useModelActions(() => {
+    void qc.invalidateQueries({ queryKey: ["models"] });
+    refresh();
   });
 
   const columns: Array<ListColumn<Model>> = [
@@ -259,41 +246,7 @@ export function ModelsPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "deploy",
-              label: "部署",
-              disabled: (item) => item.status !== "ready",
-              onClick: setDeployModel,
-            },
-            {
-              key: "favorite",
-              label: "收藏",
-              disabled: () => true,
-              tooltip: "等待后端开放收藏状态与操作接口",
-              onClick: () => undefined,
-            },
-            {
-              key: "add-version",
-              label: "新增版本",
-              disabled: () => true,
-              tooltip: "等待后端确认测试环境的版本文件上传接口",
-              onClick: () => undefined,
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              disabled: (item) => item.status === "deleted" || remove.isPending,
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除模型",
-                  content: `确定删除「${item.name}」？有关联推理服务时后端将拒绝删除。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => remove.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={models.isFetching}
           preserveTableOnEmpty
           emptyIconClassName="icon-moxing"
@@ -324,13 +277,7 @@ export function ModelsPage() {
           refresh();
         }}
       />
-      {deployModel && (
-        <CreateInferenceServiceModal
-          initialModelId={deployModel.id}
-          initialServiceName={("infer-" + deployModel.name).slice(0, 63)}
-          onCancel={() => setDeployModel(null)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

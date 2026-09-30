@@ -11,7 +11,7 @@ import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
 import { VmInstanceCreateModal } from "../VmInstanceCreateModal";
-import { useVmInstanceRowActions } from "./VmInstanceRowActions";
+import { useVmInstanceActions } from "@/hooks/useVmInstanceActions";
 
 type VmInstance = InstanceRecord;
 type StatusFilter = "all" | FilterableInstanceState;
@@ -58,7 +58,7 @@ export function VmInstancesPage() {
     setPage(1);
   }, [searchText, setPage, status]);
 
-  const { dialogNode, rowActions } = useVmInstanceRowActions();
+  const { dialogNode, actions } = useVmInstanceActions(refresh);
 
   const items = query.data?.items ?? [];
   const statusTabs = [
@@ -165,7 +165,7 @@ export function VmInstancesPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={rowActions}
+          rowActions={actions}
           loading={query.isFetching}
           emptyIconClassName="icon-yunzhuji"
           emptyText={

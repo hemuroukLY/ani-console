@@ -1,14 +1,16 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteVectorStoreKnowledgeBaseLink, type VectorStore } from "@/api/storage/vector-stores";
-import { DataTable } from "@/components/common";
+import { DataTable, type RowAction } from "@/components/common";
 import { navigateToResourceDetail } from "@/lib/resources";
 import { Alert, Button, Empty, Link, Modal, Space } from "@arco-design/web-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { useNavigate } from "@tanstack/react-router";
 
 type RelatedResource = { id: string; type: "知识库"; name: string };
 
 export function VectorStoreRelatedResources({ store }: { store: VectorStore }) {
   const navigate = useNavigate();
+
   const qc = useQueryClient();
   const unlink = useMutation({
     meta: {
@@ -19,12 +21,32 @@ export function VectorStoreRelatedResources({ store }: { store: VectorStore }) {
         errorFallback: "请求失败",
       },
     },
-    mutationFn: () => deleteVectorStoreKnowledgeBaseLink(store.id),
-    onSuccess: (updatedStore) => {
+    mutationFn: (store: VectorStore) => deleteVectorStoreKnowledgeBaseLink(store.id),
+    onSuccess: (updatedStore, store) => {
       qc.setQueryData(["vector-store", store.id], updatedStore);
       void qc.invalidateQueries({ queryKey: ["vector-stores"] });
     },
   });
+  const unlinkAction: RowAction<VectorStore> = {
+    key: "unlink-knowledge-base",
+    label: "解除关联",
+    disabled: (item) => unlink.isPending || !item.knowledge_base_ref,
+    loading: () => unlink.isPending,
+    onClick: (item) => {
+      if (unlink.isPending || !item.knowledge_base_ref) return;
+      Modal.confirm({
+        title: "解除知识库关联",
+        content:
+          "确定解除向量存储「" +
+          item.name +
+          "」与知识库「" +
+          item.knowledge_base_ref.name +
+          "」的关联？",
+        onOk: () => unlink.mutateAsync(item),
+      });
+    },
+  };
+
   const resources: RelatedResource[] = store.knowledge_base_ref
     ? [
         {
@@ -67,18 +89,13 @@ export function VectorStoreRelatedResources({ store }: { store: VectorStore }) {
             {
               title: "操作",
               width: 160,
-              render: (_, resource) => (
+              render: () => (
                 <Button
                   type="text"
                   size="small"
-                  loading={unlink.isPending}
-                  onClick={() =>
-                    void Modal.confirm({
-                      title: "解除知识库关联",
-                      content: `确定解除向量存储「${store.name}」与知识库「${resource.name}」的关联？`,
-                      onOk: () => unlink.mutateAsync(),
-                    })
-                  }
+                  loading={unlinkAction.loading?.(store)}
+                  onClick={() => unlinkAction.onClick(store)}
+                  disabled={unlinkAction.disabled?.(store)}
                 >
                   解除关联
                 </Button>

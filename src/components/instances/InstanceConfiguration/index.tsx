@@ -1,9 +1,8 @@
-import type { InstanceEnvVar, InstanceRecord } from "@/api/instances";
-import { applyInstanceLifecycle } from "@/api/instances";
-import { DataTable } from "@/components/common";
-import { Empty, Modal, Space, Tooltip, Typography } from "@arco-design/web-react";
+import { type InstanceEnvVar, type InstanceRecord, applyInstanceLifecycle } from "@/api/instances";
+import { DataTable, type RowAction } from "@/components/common";
+import { Empty, Space, Tooltip, Typography, Modal } from "@arco-design/web-react";
+import { type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
-import type { ReactNode } from "react";
 
 type Instance = InstanceRecord;
 
@@ -44,6 +43,7 @@ export function InstanceConfiguration({
     id: secretId(reference),
     purpose: secretPurpose(reference),
   }));
+
   const unbindSecret = useMutation({
     meta: {
       feedback: {
@@ -57,7 +57,7 @@ export function InstanceConfiguration({
     mutationFn: async (reference: string) => {
       const submitData = {
         action: "unbind_secret" as const,
-        secret_id: secretId(reference),
+        secret_id: reference.replace(/^(secret|key|credential)[/:]/i, ""),
       };
       await applyInstanceLifecycle(instance.id, submitData);
     },
@@ -65,6 +65,22 @@ export function InstanceConfiguration({
       onChanged();
     },
   });
+  const actions: RowAction<SecretRow>[] = [
+    {
+      key: "unbind",
+      label: "解绑",
+      intent: "danger",
+      loading: (secret) => unbindSecret.isPending && unbindSecret.variables === secret.reference,
+      onClick: (secret) => {
+        Modal.confirm({
+          title: "解绑密钥",
+          content: `确定解绑「${secret.id}」？`,
+          okButtonProps: { status: "danger" },
+          onOk: () => unbindSecret.mutateAsync(secret.reference),
+        });
+      },
+    },
+  ];
 
   return (
     <Space direction="vertical" size={24} className="w-full">
@@ -121,23 +137,7 @@ export function InstanceConfiguration({
           rowKey="reference"
           pagination={false}
           noDataElement={<Empty description="暂无绑定密钥" />}
-          rowActions={[
-            {
-              key: "unbind",
-              label: "解绑",
-              intent: "danger",
-              loading: (secret) =>
-                unbindSecret.isPending && unbindSecret.variables === secret.reference,
-              onClick: (secret) => {
-                Modal.confirm({
-                  title: "解绑密钥",
-                  content: `确定解绑「${secret.id}」？`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => unbindSecret.mutateAsync(secret.reference),
-                });
-              },
-            },
-          ]}
+          rowActions={actions}
           columns={[
             { title: "密钥", dataIndex: "id", ellipsis: true },
             { title: "用途", dataIndex: "purpose" },

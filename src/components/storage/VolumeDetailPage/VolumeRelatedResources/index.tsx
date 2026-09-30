@@ -1,36 +1,36 @@
-import { applyInstanceLifecycle } from "@/api/instances";
+import { useVolumeDetach } from "@/hooks/useVolumeDetach";
+
 import type { StorageVolume } from "@/api/storage/volumes";
-import { DataTable, StatusBadge } from "@/components/common";
-import { AttachVolumeModal } from "@/components/storage/AttachVolumeModal";
-import { Button, Empty, Modal } from "@arco-design/web-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { DataTable, StatusBadge, type RowAction } from "@/components/common";
+
+import { Button, Empty } from "@arco-design/web-react";
 
 type MountedInstance = NonNullable<StorageVolume["used_by"]>[number];
 
-export function VolumeRelatedResources({ volume }: { volume: StorageVolume }) {
-  const qc = useQueryClient();
-  const [attachVisible, setAttachVisible] = useState(false);
-  const detach = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "volume-detach",
-        action: "卸载",
-        errorFallback: "请求失败",
-      },
+export function VolumeRelatedResources({
+  volume,
+  onAttach,
+}: {
+  volume: StorageVolume;
+  onAttach: () => void;
+}) {
+  const detachVolume = useVolumeDetach();
+  const actions: RowAction<MountedInstance>[] = [
+    {
+      key: "detach",
+      label: "卸载",
+      intent: "danger",
+      loading: () => detachVolume.isPending,
+      onClick: (item) =>
+        void detachVolume.confirm({
+          volumeId: volume.id,
+          volumeName: volume.name,
+          instanceId: item.instance_id,
+          instanceName: item.instance_name,
+        }),
     },
-    mutationFn: (instanceId: string) =>
-      applyInstanceLifecycle(instanceId, {
-        action: "detach_volume" as const,
-        volume_id: volume.id,
-      }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["instances"] });
-      void qc.invalidateQueries({ queryKey: ["volume", volume.id] });
-      void qc.invalidateQueries({ queryKey: ["volumes"] });
-    },
-  });
+  ];
+
   const items = volume.used_by ?? [];
 
   return (
@@ -39,10 +39,7 @@ export function VolumeRelatedResources({ volume }: { volume: StorageVolume }) {
         <DataTable<MountedInstance>
           header={{
             title: "关联实例",
-            extra:
-              items.length === 0 ? (
-                <Button onClick={() => setAttachVisible(true)}>挂载</Button>
-              ) : undefined,
+            extra: items.length === 0 ? <Button onClick={onAttach}>挂载</Button> : undefined,
           }}
           columns={[
             { title: "实例名称", dataIndex: "instance_name" },
@@ -52,27 +49,10 @@ export function VolumeRelatedResources({ volume }: { volume: StorageVolume }) {
           ]}
           data={items}
           pagination={false}
-          rowActions={[
-            {
-              key: "detach",
-              label: "卸载",
-              intent: "danger",
-              loading: () => detach.isPending,
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "卸载块存储卷",
-                  content: `确定从实例「${item.instance_name}」卸载该卷？`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => detach.mutateAsync(item.instance_id),
-                }),
-            },
-          ]}
+          rowActions={actions}
           noDataElement={<Empty description="该卷当前未挂载实例，点击右上角「挂载」开始" />}
         />
       </div>
-      {attachVisible && (
-        <AttachVolumeModal volume={volume} onCancel={() => setAttachVisible(false)} />
-      )}
     </>
   );
 }

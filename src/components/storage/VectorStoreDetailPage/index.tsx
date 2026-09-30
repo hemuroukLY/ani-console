@@ -1,13 +1,10 @@
-import {
-  deleteVectorStore,
-  getVectorStore,
-  rebuildVectorStoreIndex,
-  type VectorStore,
-} from "@/api/storage/vector-stores";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+import { useVectorStoreActions } from "@/hooks/useVectorStoreActions";
+
+import { getVectorStore, type VectorStore } from "@/api/storage/vector-stores";
 import { withId } from "@/lib/id";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useQuery } from "@tanstack/react-query";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 
 import {
@@ -32,7 +29,7 @@ export function VectorStoreDetailPage({
   tab?: VectorStoreDetailTabKey;
 }) {
   const goBack = useBackOrFallback("vector-store");
-  const qc = useQueryClient();
+  const { actions } = useVectorStoreActions(goBack);
   const detail = useQuery({
     meta: {
       errorNotification: {
@@ -44,34 +41,7 @@ export function VectorStoreDetailPage({
     queryKey: ["vector-store", vectorStoreId],
     queryFn: () => getVectorStore(vectorStoreId),
   });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "vector-store-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (_: undefined) => deleteVectorStore(vectorStoreId),
-    onSuccess: goBack,
-  });
-  const rebuildIndex = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "vector-index-rebuild",
-        action: "重建",
-        successText: "索引重建已提交",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (_: undefined) => rebuildVectorStoreIndex(vectorStoreId),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["vector-stores"] });
-      void qc.invalidateQueries({ queryKey: ["vector-store", vectorStoreId] });
-    },
-  });
+
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
   const store = detail.data as VectorStore;
   const storeStatus = <StatusBadge status={store.state} reason={store.reason} />;
@@ -82,58 +52,7 @@ export function VectorStoreDetailPage({
       status={storeStatus}
       icon={<AliIcon name="xiangliangcunchu" size={28} />}
       headerItems={[{ label: "维度", value: String(store.dimension) }]}
-      actions={
-        <Dropdown
-          trigger="click"
-          position="br"
-          droplist={
-            <Menu
-              onClickMenuItem={(key) => {
-                if (key === "rebuild-index") {
-                  void Modal.confirm({
-                    title: "重建索引",
-                    content: `确定重建「${store.name}」的索引？重建期间检索能力可能暂时受影响。`,
-                    onOk: () => rebuildIndex.mutateAsync(undefined),
-                  });
-                  return;
-                }
-                if (key === "delete") {
-                  void Modal.confirm({
-                    title: "删除向量存储",
-                    content: `确定删除「${store.name}」？其中的向量数据将不可恢复。`,
-                    okButtonProps: { status: "danger" },
-                    onOk: () => remove.mutateAsync(undefined),
-                  });
-                }
-              }}
-            >
-              <Menu.Item
-                key="rebuild-index"
-                disabled={store.state !== "ready" || rebuildIndex.isPending || remove.isPending}
-              >
-                {rebuildIndex.isPending ? "重建中..." : "重建索引"}
-              </Menu.Item>
-              <Menu.Item
-                key="delete"
-                disabled={
-                  Boolean(store.knowledge_base_ref) || remove.isPending || rebuildIndex.isPending
-                }
-                style={{ color: "var(--color-danger-6)" }}
-              >
-                删除
-              </Menu.Item>
-            </Menu>
-          }
-        >
-          <Button
-            loading={remove.isPending || rebuildIndex.isPending}
-            aria-label="更多操作"
-            title="更多操作"
-          >
-            <IconMoreVertical />
-          </Button>
-        </Dropdown>
-      }
+      actions={<ResourceActionMenu record={store} actions={actions} />}
       cards={[
         {
           key: "basic",

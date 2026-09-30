@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Modal } from "@arco-design/web-react";
+import { useBucketActions } from "@/hooks/useBucketActions";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useState } from "react";
-import { deleteBucket, listBuckets, type StorageBucketRecord } from "@/api/storage/buckets";
-import { BucketAclModal } from "@/components/storage/BucketAclModal";
-import { BucketUploadModal } from "@/components/storage/BucketUploadModal";
+import { listBuckets, type StorageBucketRecord } from "@/api/storage/buckets";
+
 import { CreateBucketModal } from "@/components/storage/CreateBucketModal";
 import { ResourceNameId, ListPageFrame, type ListColumn, ListDataTable } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
@@ -15,8 +15,7 @@ type SearchField = "name" | "id";
 export function ObjectsPage() {
   const queryClient = useQueryClient();
   const [createVisible, setCreateVisible] = useState(false);
-  const [uploadBucket, setUploadBucket] = useState<Bucket>();
-  const [aclBucket, setAclBucket] = useState<Bucket>();
+
   const [searchField, setSearchField] = useState<SearchField>("name");
   const [searchText, setSearchText] = useState("");
   const {
@@ -45,20 +44,9 @@ export function ObjectsPage() {
       });
     },
   });
-  const removeBucket = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "bucket-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (bucket: Bucket) => deleteBucket(bucket.id),
-    onSuccess: () => {
-      resetPagination();
-      void queryClient.invalidateQueries({ queryKey: ["buckets"] });
-    },
+  const { actions, dialogNode } = useBucketActions(() => {
+    resetPagination();
+    void queryClient.invalidateQueries({ queryKey: ["buckets"] });
   });
   const items = (buckets.data?.items ?? []) as Bucket[];
   const paginationTotal = buckets.data?.total ?? items.length;
@@ -155,31 +143,7 @@ export function ObjectsPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "upload",
-              label: "上传",
-              onClick: setUploadBucket,
-            },
-            {
-              key: "permissions",
-              label: "改权限",
-              onClick: setAclBucket,
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              loading: (item) => removeBucket.isPending && removeBucket.variables?.id === item.id,
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除存储桶",
-                  content: `确定删除「${item.name}」？请先清空桶内对象，删除后不可恢复。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => removeBucket.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={buckets.isFetching}
           emptyIconClassName="icon-duixiangcunchu1"
           emptyText={searchText ? "没有符合条件的存储桶" : "还没有存储桶，点击「创建存储桶」开始"}
@@ -195,8 +159,7 @@ export function ObjectsPage() {
         />
       </ListPageFrame>
       <CreateBucketModal visible={createVisible} onCancel={() => setCreateVisible(false)} />
-      <BucketUploadModal bucket={uploadBucket} onCancel={() => setUploadBucket(undefined)} />
-      <BucketAclModal bucket={aclBucket} onCancel={() => setAclBucket(undefined)} />
+      {dialogNode}
     </>
   );
 }

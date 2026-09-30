@@ -11,7 +11,7 @@ import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
 import { ContainerInstanceCreateModal } from "@/components/instances/ContainerInstanceCreateModal";
 import { containerInstanceDataSource } from "./data-source";
-import { useContainerInstanceRowActions } from "./ContainerInstanceRowActions";
+import { useContainerInstanceActions } from "@/hooks/useContainerInstanceActions";
 import type {
   ContainerInstance,
   ContainerInstanceDataSource,
@@ -72,7 +72,9 @@ export function ContainerInstancesPage({
     queryFn: () => dataSource.list({ status, searchField, keyword, page, pageSize }),
     placeholderData: (previous) => previous,
   });
-  const { dialogNode, rowActions } = useContainerInstanceRowActions(() => void query.refetch());
+  const { dialogNode, actions } = useContainerInstanceActions<ContainerInstance>(
+    () => void query.refetch(),
+  );
 
   const result = query.data ?? {
     items: [],
@@ -203,7 +205,7 @@ export function ContainerInstancesPage({
         <ListDataTable
           data={result.items}
           columns={allColumns}
-          rowActions={rowActions}
+          rowActions={actions}
           loading={query.isFetching}
           emptyIconClassName="icon-rongqishili"
           emptyText={

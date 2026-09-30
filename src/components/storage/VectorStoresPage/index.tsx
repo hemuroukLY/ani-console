@@ -1,13 +1,10 @@
+import { useVectorStoreActions } from "@/hooks/useVectorStoreActions";
+
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, Modal } from "@arco-design/web-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@arco-design/web-react";
 import { useMemo, useState } from "react";
-import {
-  deleteVectorStore,
-  listVectorStores,
-  rebuildVectorStoreIndex,
-  type VectorStore,
-} from "@/api/storage/vector-stores";
+import { listVectorStores, type VectorStore } from "@/api/storage/vector-stores";
 
 import { CreateVectorStoreModal } from "@/components/storage/CreateVectorStoreModal";
 import {
@@ -58,36 +55,10 @@ export function VectorStoresPage() {
       });
     },
   });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "vector-store-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: VectorStore) => deleteVectorStore(item.id),
-    onSuccess: () => {
-      resetPagination();
-      void qc.invalidateQueries({ queryKey: ["vector-stores"] });
-    },
-  });
-  const rebuildIndex = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "vector-index-rebuild",
-        action: "重建",
-        successText: "索引重建已提交",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: VectorStore) => rebuildVectorStoreIndex(item.id),
-    onSuccess: (_, item) => {
-      void qc.invalidateQueries({ queryKey: ["vector-stores"] });
-      void qc.invalidateQueries({ queryKey: ["vector-store", item.id] });
-    },
+
+  const { actions } = useVectorStoreActions(() => {
+    resetPagination();
+    void qc.invalidateQueries({ queryKey: ["vector-stores"] });
   });
   const items = useMemo(() => (stores.data?.items ?? []) as VectorStore[], [stores.data?.items]);
   const paginationTotal = stores.data?.total ?? items.length;
@@ -229,41 +200,7 @@ export function VectorStoresPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "rebuild-index",
-              label: (item) =>
-                rebuildIndex.isPending && rebuildIndex.variables?.id === item.id
-                  ? "重建中..."
-                  : "重建索引",
-              widthLabel: "重建索引",
-              disabled: (item) =>
-                item.state !== "ready" ||
-                (rebuildIndex.isPending && rebuildIndex.variables?.id === item.id),
-              tooltip: (item) => (item.state === "ready" ? undefined : "仅可用状态支持重建索引"),
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "重建索引",
-                  content: `确定重建「${item.name}」的索引？重建期间检索能力可能暂时受影响。`,
-                  onOk: () => rebuildIndex.mutateAsync(item),
-                }),
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              disabled: (item) => Boolean(item.knowledge_base_ref),
-              tooltip: (item) =>
-                item.knowledge_base_ref ? "请先解除知识库关联后再删除" : undefined,
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除向量存储",
-                  content: `确定删除「${item.name}」？其中的向量数据将不可恢复。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => remove.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={stores.isFetching}
           emptyIconClassName="icon-xiangliangcunchu"
           emptyText={

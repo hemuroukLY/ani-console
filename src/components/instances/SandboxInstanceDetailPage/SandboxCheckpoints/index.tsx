@@ -1,16 +1,16 @@
 import {
   listSandboxCheckpoints,
-  restoreSandboxCheckpoint,
   type SandboxCheckpoint,
+  restoreSandboxCheckpoint,
 } from "@/api/instances";
-import { DataTable, StatusBadge } from "@/components/common";
+import { DataTable, StatusBadge, type RowAction } from "@/components/common";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
-import { Button, Empty, Modal, Space, Typography } from "@arco-design/web-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { Button, Empty, Space, Typography, Modal } from "@arco-design/web-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { SandboxCheckpointCloneModal } from "./SandboxCheckpointCloneModal";
-import { SandboxCheckpointCreateModal } from "./SandboxCheckpointCreateModal";
+import { SandboxCheckpointCloneModal } from "@/components/instances/SandboxCheckpointCloneModal";
+import { SandboxCheckpointCreateModal } from "@/components/instances/SandboxCheckpointCreateModal";
 
 export function SandboxCheckpoints({
   instanceId,
@@ -21,10 +21,6 @@ export function SandboxCheckpoints({
   sessionState: string;
   onChanged: () => void;
 }) {
-  const [createVisible, setCreateVisible] = useState(false);
-  const [cloneTarget, setCloneTarget] = useState<SandboxCheckpoint>();
-  const canCheckpoint = ["running", "paused"].includes(sessionState);
-
   const checkpoints = useQuery({
     meta: {
       errorNotification: {
@@ -36,6 +32,10 @@ export function SandboxCheckpoints({
     queryKey: ["sandbox-checkpoints", instanceId],
     queryFn: () => listSandboxCheckpoints(instanceId),
   });
+
+  const [createVisible, setCreateVisible] = useState(false);
+  const [cloneTarget, setCloneTarget] = useState<SandboxCheckpoint>();
+  const canCheckpoint = ["running", "paused"].includes(sessionState);
   const restoreCheckpoint = useMutation({
     meta: {
       feedback: {
@@ -65,6 +65,43 @@ export function SandboxCheckpoints({
     });
   };
 
+  const actions: RowAction<SandboxCheckpoint>[] = [
+    {
+      key: "restore",
+      label: "恢复",
+      disabled: (item) => item.status !== "available" || !canCheckpoint,
+      onClick: confirmRestore,
+    },
+    {
+      key: "clone",
+      label: "克隆",
+      disabled: (item) => item.status !== "available",
+      onClick: setCloneTarget,
+    },
+  ];
+  const dialogNode = (
+    <>
+      {createVisible && (
+        <SandboxCheckpointCreateModal
+          instanceId={instanceId}
+          onCancel={() => setCreateVisible(false)}
+          onCreated={() => {
+            void checkpoints.refetch();
+            onChanged();
+          }}
+        />
+      )}
+      {cloneTarget && (
+        <SandboxCheckpointCloneModal
+          instanceId={instanceId}
+          checkpoint={cloneTarget}
+          onCancel={() => setCloneTarget(undefined)}
+        />
+      )}
+    </>
+  );
+  const openCreate = () => setCreateVisible(true);
+
   return (
     <>
       <Space direction="vertical" size={24} className="w-full">
@@ -79,12 +116,7 @@ export function SandboxCheckpoints({
               >
                 刷新
               </Button>
-              <Button
-                size="small"
-                type="primary"
-                disabled={!canCheckpoint}
-                onClick={() => setCreateVisible(true)}
-              >
+              <Button size="small" type="primary" disabled={!canCheckpoint} onClick={openCreate}>
                 创建检查点
               </Button>
             </Space>
@@ -96,20 +128,7 @@ export function SandboxCheckpoints({
             loading={checkpoints.isLoading || checkpoints.isFetching}
             pagination={false}
             noDataElement={<Empty description="暂无检查点" />}
-            rowActions={[
-              {
-                key: "restore",
-                label: "恢复",
-                disabled: (item) => item.status !== "available" || !canCheckpoint,
-                onClick: confirmRestore,
-              },
-              {
-                key: "clone",
-                label: "克隆",
-                disabled: (item) => item.status !== "available",
-                onClick: setCloneTarget,
-              },
-            ]}
+            rowActions={actions}
             columns={[
               {
                 title: "名称",
@@ -141,23 +160,7 @@ export function SandboxCheckpoints({
         </section>
       </Space>
 
-      {createVisible && (
-        <SandboxCheckpointCreateModal
-          instanceId={instanceId}
-          onCancel={() => setCreateVisible(false)}
-          onCreated={() => {
-            void checkpoints.refetch();
-            onChanged();
-          }}
-        />
-      )}
-      {cloneTarget && (
-        <SandboxCheckpointCloneModal
-          instanceId={instanceId}
-          checkpoint={cloneTarget}
-          onCancel={() => setCloneTarget(undefined)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

@@ -1,4 +1,7 @@
-import { deleteFilesystem, getFilesystem, type StorageFilesystem } from "@/api/storage/filesystems";
+import { useFilesystemActions } from "@/hooks/useFilesystemActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
+import { getFilesystem, type StorageFilesystem } from "@/api/storage/filesystems";
 import {
   AliIcon,
   DetailPageFrame,
@@ -7,13 +10,11 @@ import {
   StatusBadge,
 } from "@/components/common";
 import { withId } from "@/lib/id";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery } from "@tanstack/react-query";
+
+import { useQuery } from "@tanstack/react-query";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useCallback, useState } from "react";
 
-import { ExpandFilesystemModal } from "@/components/storage/ExpandFilesystemModal";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
 import { FilesystemMountTargets } from "./FilesystemMountTargets";
@@ -22,7 +23,7 @@ type Filesystem = StorageFilesystem;
 
 export function FilesystemDetailPage({ filesystemId }: { filesystemId: string }) {
   const goBack = useBackOrFallback("filesystem");
-  const [expandVisible, setExpandVisible] = useState(false);
+
   const [mountCount, setMountCount] = useState(0);
   const handleMountCountChange = useCallback((count: number) => setMountCount(count), []);
   const detail = useQuery({
@@ -36,49 +37,13 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
     queryKey: ["filesystem", filesystemId],
     queryFn: () => getFilesystem(filesystemId),
   });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "filesystem-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (_: undefined) => deleteFilesystem(filesystemId),
-    onSuccess: goBack,
-  });
+  const { actions, dialogNode, openMountTarget } = useFilesystemActions(goBack);
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
   const filesystem = detail.data as Filesystem;
   // const unavailable = (description: string) => <Empty description={description} />;
   const filesystemStatus = <StatusBadge status={filesystem.state} reason={filesystem.reason} />;
-  const handleMoreAction = (action: string) => {
-    if (action === "expand") {
-      setExpandVisible(true);
-      return;
-    }
-    if (action === "delete") {
-      Modal.confirm({
-        title: "删除文件存储",
-        content: `确定删除「${filesystem.name}」？请先卸载所有客户端并确认没有业务正在访问。`,
-        okButtonProps: { status: "danger" },
-        onOk: () => remove.mutateAsync(undefined),
-      });
-    }
-  };
-  const moreMenu = (
-    <Menu onClickMenuItem={handleMoreAction}>
-      <Menu.Item key="expand">扩容</Menu.Item>
-      <Menu.Item
-        key="delete"
-        disabled={remove.isPending}
-        style={{ color: "var(--color-danger-6)" }}
-      >
-        删除
-      </Menu.Item>
-    </Menu>
-  );
+
   return (
     <>
       <DetailPageFrame
@@ -87,13 +52,7 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
         status={filesystemStatus}
         icon={<AliIcon name="wenjiancunchu" size={28} />}
         headerItems={[{ label: "容量 (GiB)", value: String(filesystem.size_gib) }]}
-        actions={
-          <Dropdown trigger="click" position="br" droplist={moreMenu}>
-            <Button disabled={remove.isPending} aria-label="更多操作" title="更多操作">
-              <IconMoreVertical />
-            </Button>
-          </Dropdown>
-        }
+        actions={<ResourceActionMenu record={filesystem} actions={actions} />}
         cards={[
           {
             key: "basic",
@@ -133,6 +92,7 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
             label: "挂载点",
             content: (
               <FilesystemMountTargets
+                onCreateMountTarget={() => openMountTarget(filesystemId)}
                 filesystemId={filesystemId}
                 onMountCountChange={handleMountCountChange}
               />
@@ -150,9 +110,7 @@ export function FilesystemDetailPage({ filesystemId }: { filesystemId: string })
         ]}
         onBack={goBack}
       />
-      {expandVisible && (
-        <ExpandFilesystemModal filesystem={filesystem} onCancel={() => setExpandVisible(false)} />
-      )}
+      {dialogNode}
     </>
   );
 }

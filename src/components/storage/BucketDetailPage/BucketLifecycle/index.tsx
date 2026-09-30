@@ -1,19 +1,16 @@
 import {
-  deleteBucketLifecycleRule,
   listBucketLifecycleRules,
   type StorageBucketLifecycleRule,
+  deleteBucketLifecycleRule,
 } from "@/api/storage/buckets";
-import { DataTable, StatusBadge } from "@/components/common";
-import { CreateLifecycleRuleModal } from "@/components/storage/CreateLifecycleRuleModal";
+import { DataTable, StatusBadge, type RowAction } from "@/components/common";
 import { withId } from "@/lib/id";
-import { Button, Empty, Modal, Space, Typography } from "@arco-design/web-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Empty, Space, Typography, Modal } from "@arco-design/web-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { CreateLifecycleRuleModal } from "@/components/storage/CreateLifecycleRuleModal";
 import { useState } from "react";
 
 export function BucketLifecycle({ bucketId }: { bucketId: string }) {
-  const qc = useQueryClient();
-  const [visible, setVisible] = useState(false);
-  const [editingRule, setEditingRule] = useState<StorageBucketLifecycleRule>();
   const rules = useQuery({
     meta: {
       errorNotification: {
@@ -25,6 +22,10 @@ export function BucketLifecycle({ bucketId }: { bucketId: string }) {
     queryKey: ["bucket-lifecycle-rules", bucketId],
     queryFn: () => listBucketLifecycleRules(bucketId),
   });
+
+  const qc = useQueryClient();
+  const [visible, setVisible] = useState(false);
+  const [editingRule, setEditingRule] = useState<StorageBucketLifecycleRule>();
   const remove = useMutation({
     meta: {
       feedback: {
@@ -41,6 +42,44 @@ export function BucketLifecycle({ bucketId }: { bucketId: string }) {
       void qc.invalidateQueries({ queryKey: ["buckets"] });
     },
   });
+  const actions: RowAction<StorageBucketLifecycleRule>[] = [
+    {
+      key: "edit",
+      label: "编辑",
+      onClick: (row) => {
+        setEditingRule(row);
+        setVisible(true);
+      },
+    },
+    {
+      key: "delete",
+      label: "删除",
+      intent: "danger",
+      loading: (row) => remove.isPending && remove.variables?.id === row.id,
+      onClick: (row) =>
+        void Modal.confirm({
+          title: "删除生命周期规则",
+          content: `确定删除规则「${row.name}」？`,
+          okButtonProps: { status: "danger" },
+          onOk: () => remove.mutateAsync(row),
+        }),
+    },
+  ];
+  const dialogNode = (
+    <>
+      {visible && (
+        <CreateLifecycleRuleModal
+          bucketId={bucketId}
+          rule={editingRule}
+          onCancel={() => setVisible(false)}
+        />
+      )}
+    </>
+  );
+  const openCreate = () => {
+    setEditingRule(undefined);
+    setVisible(true);
+  };
   const items = (rules.data?.items ?? []) as StorageBucketLifecycleRule[];
 
   return (
@@ -50,13 +89,7 @@ export function BucketLifecycle({ bucketId }: { bucketId: string }) {
           <Typography.Text>
             共 <Typography.Text bold>{items.length}</Typography.Text> 条生命周期规则
           </Typography.Text>
-          <Button
-            type="primary"
-            onClick={() => {
-              setEditingRule(undefined);
-              setVisible(true);
-            }}
-          >
+          <Button type="primary" onClick={openCreate}>
             添加规则
           </Button>
         </div>
@@ -79,39 +112,11 @@ export function BucketLifecycle({ bucketId }: { bucketId: string }) {
           data={items}
           loading={rules.isLoading}
           pagination={false}
-          rowActions={[
-            {
-              key: "edit",
-              label: "编辑",
-              onClick: (row) => {
-                setEditingRule(row);
-                setVisible(true);
-              },
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              loading: (row) => remove.isPending && remove.variables?.id === row.id,
-              onClick: (row) =>
-                void Modal.confirm({
-                  title: "删除生命周期规则",
-                  content: `确定删除规则「${row.name}」？`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => remove.mutateAsync(row),
-                }),
-            },
-          ]}
+          rowActions={actions}
           noDataElement={<Empty description="暂无生命周期规则，点击「添加规则」开始" />}
         />
       </Space>
-      {visible && (
-        <CreateLifecycleRuleModal
-          bucketId={bucketId}
-          rule={editingRule}
-          onCancel={() => setVisible(false)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

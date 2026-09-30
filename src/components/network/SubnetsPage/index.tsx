@@ -1,10 +1,11 @@
+import { useSubnetActions } from "@/hooks/useSubnetActions";
+
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Form, Input, Link, Modal, Select } from "@arco-design/web-react";
 import { useMemo, useState } from "react";
 import {
   createNetworkSubnet,
-  deleteNetworkSubnet,
   listNetworkSubnets,
   listNetworkVpcs,
   type NetworkSubnet,
@@ -143,20 +144,9 @@ export function SubnetsPage() {
       qc.invalidateQueries({ queryKey: ["network-subnets"] });
     },
   });
-  const deleteSubnet = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "subnet-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (subnet: Subnet) => deleteNetworkSubnet(subnet.id),
-    onSuccess: () => {
-      resetPagination();
-      qc.invalidateQueries({ queryKey: ["network-subnets"] });
-    },
+  const { actions } = useSubnetActions(() => {
+    resetPagination();
+    qc.invalidateQueries({ queryKey: ["network-subnets"] });
   });
 
   const items = useMemo(() => (subnets.data?.items ?? []) as Subnet[], [subnets.data?.items]);
@@ -297,20 +287,7 @@ export function SubnetsPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (subnet) =>
-                void Modal.confirm({
-                  title: "删除子网",
-                  content: `确定删除「${subnet.name}」？存在关联实例时无法删除，请先清理相关资源。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => deleteSubnet.mutateAsync(subnet),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={subnets.isFetching || vpcs.isFetching}
           emptyIconClassName="icon-VPCwangluo"
           emptyText={

@@ -1,16 +1,16 @@
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
-import { Modal } from "@arco-design/web-react";
+import { useFilesystemActions } from "@/hooks/useFilesystemActions";
+
+import { useQueries, useQueryClient } from "@tanstack/react-query";
+
 import { useMemo, useState } from "react";
 import {
-  deleteFilesystem,
   listFilesystemMountTargets,
   listFilesystems,
   type StorageFilesystem,
 } from "@/api/storage/filesystems";
 
 import { CreateFilesystemModal } from "@/components/storage/CreateFilesystemModal";
-import { CreateFilesystemMountTargetModal } from "@/components/storage/CreateFilesystemMountTargetModal";
-import { ExpandFilesystemModal } from "@/components/storage/ExpandFilesystemModal";
+
 import {
   ResourceNameId,
   ListPageFrame,
@@ -28,8 +28,7 @@ type SearchField = "name" | "id";
 export function FilesystemsPage() {
   const qc = useQueryClient();
   const [createVisible, setCreateVisible] = useState(false);
-  const [expandTarget, setExpandTarget] = useState<Filesystem | null>(null);
-  const [mountTargetFilesystem, setMountTargetFilesystem] = useState<Filesystem | null>(null);
+
   const [status, setStatus] = useState<StatusFilter>("all");
   const [searchField, setSearchField] = useState<SearchField>("name");
   const [searchText, setSearchText] = useState("");
@@ -60,20 +59,9 @@ export function FilesystemsPage() {
       });
     },
   });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "filesystem-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: Filesystem) => deleteFilesystem(item.id),
-    onSuccess: () => {
-      resetPagination();
-      void qc.invalidateQueries({ queryKey: ["filesystems"] });
-    },
+  const { actions, dialogNode } = useFilesystemActions(() => {
+    resetPagination();
+    void qc.invalidateQueries({ queryKey: ["filesystems"] });
   });
   const items = useMemo(
     () => (filesystems.data?.items ?? []) as Filesystem[],
@@ -205,30 +193,7 @@ export function FilesystemsPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "expand",
-              label: "扩容",
-              onClick: setExpandTarget,
-            },
-            {
-              key: "mount-target",
-              label: "添加挂载点",
-              onClick: setMountTargetFilesystem,
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除文件存储",
-                  content: `确定删除「${item.name}」？请先确认没有实例正在使用该文件系统。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => remove.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={filesystems.isFetching}
           emptyIconClassName="icon-wenjiancunchu"
           emptyText={
@@ -248,15 +213,7 @@ export function FilesystemsPage() {
         />
       </ListPageFrame>
       {createVisible && <CreateFilesystemModal onCancel={() => setCreateVisible(false)} />}
-      {expandTarget && (
-        <ExpandFilesystemModal filesystem={expandTarget} onCancel={() => setExpandTarget(null)} />
-      )}
-      {mountTargetFilesystem && (
-        <CreateFilesystemMountTargetModal
-          filesystemId={mountTargetFilesystem.id}
-          onCancel={() => setMountTargetFilesystem(null)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

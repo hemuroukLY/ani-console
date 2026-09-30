@@ -1,19 +1,24 @@
 import { withId } from "@/lib/id";
-import { Empty, Modal, Space, Tag } from "@arco-design/web-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
-
+import { Empty, Space, Tag, Modal } from "@arco-design/web-react";
+import { type ReactNode, useState } from "react";
 import {
-  deleteKnowledgeBaseDocument,
   listKnowledgeBaseDocuments,
-  reparseKnowledgeBaseDocument,
   type KBDocument,
+  deleteKnowledgeBaseDocument,
+  reparseKnowledgeBaseDocument,
 } from "@/api/knowledge";
-import { DataTable, ResourceNameId, StatusBadge, type ListColumn } from "@/components/common";
-import { KnowledgeDocumentChunksDrawer } from "@/components/knowledge/KnowledgeDocumentChunksDrawer";
+import {
+  DataTable,
+  ResourceNameId,
+  StatusBadge,
+  type ListColumn,
+  type RowAction,
+} from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
 import styles from "./index.module.css";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { KnowledgeDocumentChunksDrawer } from "@/components/knowledge/KnowledgeDocumentChunksDrawer";
 
 function formatBytes(value?: number) {
   if (value == null) return "-";
@@ -63,8 +68,6 @@ function statusTag(document: KBDocument) {
 }
 
 export function KnowledgeDocuments({ kbId, action }: { kbId: string; action?: ReactNode }) {
-  const qc = useQueryClient();
-  const [previewDocument, setPreviewDocument] = useState<KBDocument>();
   const {
     query: documents,
     page,
@@ -82,6 +85,9 @@ export function KnowledgeDocuments({ kbId, action }: { kbId: string; action?: Re
     cursorScope: kbId,
     fetchPage: ({ cursor, limit }) => listKnowledgeBaseDocuments(kbId, { limit, cursor }),
   });
+
+  const qc = useQueryClient();
+  const [previewDocument, setPreviewDocument] = useState<KBDocument>();
   const remove = useMutation({
     meta: {
       feedback: {
@@ -116,6 +122,52 @@ export function KnowledgeDocuments({ kbId, action }: { kbId: string; action?: Re
       void qc.invalidateQueries({ queryKey: ["knowledge-base", kbId] });
     },
   });
+  const actions: RowAction<KBDocument>[] = [
+    {
+      key: "view-chunks",
+      label: "查看分块",
+      visible: (item) => (item.chunk_count ?? 0) > 0,
+      onClick: setPreviewDocument,
+    },
+    {
+      key: "reparse",
+      label: "重新解析",
+      visible: (item) => item.parse_status === "failed",
+      loading: (item) => reparse.isPending && reparse.variables?.id === item.id,
+      onClick: (item) => {
+        Modal.confirm({
+          title: "重新解析文档",
+          content: `重新解析将覆盖「${item.file_name}」现有分块，确定继续？`,
+          onOk: () => reparse.mutateAsync(item),
+        });
+      },
+    },
+    {
+      key: "delete",
+      label: "删除",
+      intent: "danger",
+      loading: (item) => remove.isPending && remove.variables?.id === item.id,
+      onClick: (item) => {
+        Modal.confirm({
+          title: "删除文档",
+          content: `确定删除「${item.file_name}」？`,
+          okButtonProps: { status: "danger" },
+          onOk: () => remove.mutateAsync(item),
+        });
+      },
+    },
+  ];
+  const dialogNode = (
+    <>
+      <KnowledgeDocumentChunksDrawer
+        kbId={kbId}
+        document={previewDocument}
+        visible={Boolean(previewDocument)}
+        onCancel={() => setPreviewDocument(undefined)}
+      />
+    </>
+  );
+
   const rows = documents.data?.items ?? [];
   const columns: Array<ListColumn<KBDocument>> = [
     {
@@ -179,41 +231,7 @@ export function KnowledgeDocuments({ kbId, action }: { kbId: string; action?: Re
         noDataElement={<Empty description="还没有文档，上传后可进行解析和问答" />}
         tableLabel="知识库文档与解析列表"
         scroll={{ x: 1370 }}
-        rowActions={[
-          {
-            key: "view-chunks",
-            label: "查看分块",
-            visible: (item) => (item.chunk_count ?? 0) > 0,
-            onClick: setPreviewDocument,
-          },
-          {
-            key: "reparse",
-            label: "重新解析",
-            visible: (item) => item.parse_status === "failed",
-            loading: (item) => reparse.isPending && reparse.variables?.id === item.id,
-            onClick: (item) => {
-              Modal.confirm({
-                title: "重新解析文档",
-                content: `重新解析将覆盖「${item.file_name}」现有分块，确定继续？`,
-                onOk: () => reparse.mutateAsync(item),
-              });
-            },
-          },
-          {
-            key: "delete",
-            label: "删除",
-            intent: "danger",
-            loading: (item) => remove.isPending && remove.variables?.id === item.id,
-            onClick: (item) => {
-              Modal.confirm({
-                title: "删除文档",
-                content: `确定删除「${item.file_name}」？`,
-                okButtonProps: { status: "danger" },
-                onOk: () => remove.mutateAsync(item),
-              });
-            },
-          },
-        ]}
+        rowActions={actions}
         pagination={{
           page,
           pageSize,
@@ -222,12 +240,7 @@ export function KnowledgeDocuments({ kbId, action }: { kbId: string; action?: Re
           onPageSizeChange: setPageSize,
         }}
       />
-      <KnowledgeDocumentChunksDrawer
-        kbId={kbId}
-        document={previewDocument}
-        visible={Boolean(previewDocument)}
-        onCancel={() => setPreviewDocument(undefined)}
-      />
+      {dialogNode}
     </Space>
   );
 }

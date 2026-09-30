@@ -1,8 +1,9 @@
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Modal } from "@arco-design/web-react";
+import { useKnowledgeBaseActions } from "@/hooks/useKnowledgeBaseActions";
+
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useState } from "react";
-import { deleteKnowledgeBase, listKnowledgeBases, type KnowledgeBase } from "@/api/knowledge";
+import { listKnowledgeBases, type KnowledgeBase } from "@/api/knowledge";
 
 import { CreateKnowledgeBaseModal } from "@/components/knowledge/CreateKnowledgeBaseModal";
 import {
@@ -14,13 +15,11 @@ import {
 } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
-import { navigateToResourceDetail } from "@/lib/resources";
 
 type StatusFilter = "all" | "active" | "rebuilding";
 type SearchField = "name" | "id";
 
 export function KnowledgeBasesPage() {
-  const navigate = useNavigate();
   const qc = useQueryClient();
   const [createVisible, setCreateVisible] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -47,20 +46,9 @@ export function KnowledgeBasesPage() {
         });
       },
     });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "knowledge-base-delete",
-        action: "删除知识库",
-        errorFallback: "删除知识库失败",
-      },
-    },
-    mutationFn: (item: KnowledgeBase) => deleteKnowledgeBase(item.id),
-    onSuccess: () => {
-      resetPagination();
-      void qc.invalidateQueries({ queryKey: ["knowledge-bases"] });
-    },
+  const { actions } = useKnowledgeBaseActions(() => {
+    resetPagination();
+    void qc.invalidateQueries({ queryKey: ["knowledge-bases"] });
   });
   const items = query.data?.items ?? [];
   const paginationTotal = query.data?.total ?? items.length;
@@ -188,30 +176,7 @@ export function KnowledgeBasesPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "chat",
-              label: "问答",
-              onClick: (item) =>
-                navigateToResourceDetail(navigate, {
-                  type: "knowledge-base",
-                  id: item.id,
-                  search: { tab: "chat" },
-                }),
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除知识库",
-                  content: `确定删除「${item.name}」？知识库及其文档将不可恢复。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => remove.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={query.isFetching}
           emptyIconClassName="icon-zhishiku"
           emptyText={

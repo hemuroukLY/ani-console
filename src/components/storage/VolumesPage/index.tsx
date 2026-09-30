@@ -1,17 +1,13 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Modal } from "@arco-design/web-react";
+import { useVolumeActions } from "@/hooks/useVolumeActions";
+
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useMemo, useState } from "react";
-import { applyInstanceLifecycle } from "@/api/instances";
-import {
-  deleteVolume as removeVolume,
-  listVolumes,
-  type StorageVolume,
-} from "@/api/storage/volumes";
+
+import { listVolumes, type StorageVolume } from "@/api/storage/volumes";
 
 import { CreateVolumeModal } from "@/components/storage/CreateVolumeModal";
-import { CreateVolumeSnapshotModal } from "@/components/storage/CreateVolumeSnapshotModal";
-import { ExpandVolumeModal } from "@/components/storage/ExpandVolumeModal";
-import { AttachVolumeModal } from "@/components/storage/AttachVolumeModal";
+
 import {
   ResourceNameId,
   ListPageFrame,
@@ -30,9 +26,7 @@ type SearchField = "name" | "id";
 export function VolumesPage() {
   const qc = useQueryClient();
   const [createVisible, setCreateVisible] = useState(false);
-  const [attachTarget, setAttachTarget] = useState<Volume | null>(null);
-  const [expandTarget, setExpandTarget] = useState<Volume | null>(null);
-  const [snapshotTarget, setSnapshotTarget] = useState<Volume | null>(null);
+
   const [status, setStatus] = useState<StatusFilter>("all");
   const [searchField, setSearchField] = useState<SearchField>("name");
   const [searchText, setSearchText] = useState("");
@@ -64,45 +58,13 @@ export function VolumesPage() {
       });
     },
   });
-  const deleteVolume = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "volume-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: Volume) => removeVolume(item.id),
-    onSuccess: () => {
-      resetPagination();
-      void qc.invalidateQueries({ queryKey: ["volumes"] });
-    },
+  const { actions, dialogNode } = useVolumeActions(() => {
+    resetPagination();
+    void qc.invalidateQueries({ queryKey: ["volumes"] });
   });
-  const detachVolume = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "volume-detach",
-        action: "卸载",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async (item: Volume) => {
-      if (!item.mount_instance_id) throw new Error("块存储卷未挂载实例");
-      return applyInstanceLifecycle(item.mount_instance_id, {
-        action: "detach_volume" as const,
-        volume_id: item.id,
-      });
-    },
-    onSuccess: (_data, item) => {
-      void qc.invalidateQueries({ queryKey: ["instances"] });
-      void qc.invalidateQueries({ queryKey: ["volume", item.id] });
-      void qc.invalidateQueries({ queryKey: ["volumes"] });
-    },
-  });
+
   const items = useMemo(() => (volumes.data?.items ?? []) as Volume[], [volumes.data?.items]);
-  const isMounted = (item: Volume) => Boolean(item.mount_instance_id);
+
   const paginationTotal = volumes.data?.total ?? items.length;
   const columns: Array<ListColumn<Volume>> = [
     {
@@ -237,50 +199,7 @@ export function VolumesPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "expand",
-              label: "扩容",
-              onClick: setExpandTarget,
-            },
-            {
-              key: "mount",
-              label: "挂载",
-              visible: (item) => !isMounted(item),
-              onClick: setAttachTarget,
-            },
-            {
-              key: "unmount",
-              label: "卸载",
-              intent: "danger",
-              visible: isMounted,
-              loading: (item) => detachVolume.isPending && detachVolume.variables?.id === item.id,
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "卸载块存储卷",
-                  content: `确定从「${item.mount_name ?? item.mount_instance_id}」卸载「${item.name}」？请先确保实例内没有进程正在读写该卷。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => detachVolume.mutateAsync(item),
-                }),
-            },
-            {
-              key: "snapshot",
-              label: "创建快照",
-              onClick: setSnapshotTarget,
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除块存储卷",
-                  content: `确定删除「${item.name}」？卷被实例挂载时无法删除。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => deleteVolume.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={volumes.isFetching}
           emptyIconClassName="icon-kuaicunchu"
           emptyText={
@@ -300,18 +219,7 @@ export function VolumesPage() {
         />
       </ListPageFrame>
       {createVisible && <CreateVolumeModal onCancel={() => setCreateVisible(false)} />}
-      {attachTarget && (
-        <AttachVolumeModal volume={attachTarget} onCancel={() => setAttachTarget(null)} />
-      )}
-      {expandTarget && (
-        <ExpandVolumeModal volume={expandTarget} onCancel={() => setExpandTarget(null)} />
-      )}
-      {snapshotTarget && (
-        <CreateVolumeSnapshotModal
-          volumeId={snapshotTarget.id}
-          onCancel={() => setSnapshotTarget(null)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

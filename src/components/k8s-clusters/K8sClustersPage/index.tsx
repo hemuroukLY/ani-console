@@ -1,14 +1,9 @@
-import { downloadBlob } from "@/lib/browser";
+import { useK8sClusterActions } from "@/hooks/useK8sClusterActions";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Form, Input, Modal } from "@arco-design/web-react";
 import { useEffect, useMemo, useState } from "react";
-import {
-  createK8sCluster,
-  deleteK8sCluster,
-  getK8sClusterKubeconfig,
-  listK8sClusters,
-  type K8sCluster,
-} from "@/api/k8s-clusters";
+import { createK8sCluster, listK8sClusters, type K8sCluster } from "@/api/k8s-clusters";
 import {
   StatusBadge,
   ResourceNameId,
@@ -89,41 +84,9 @@ function ClusterList() {
     },
   });
 
-  const downloadKubeconfig = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "kubeconfig-download",
-        action: "操作",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async (cluster: Cluster) => {
-      const clusterId = cluster.id;
-      if (!clusterId) throw new Error("缺少集群 ID");
-      const data = await getK8sClusterKubeconfig(clusterId);
-      const content = data.kubeconfig ?? JSON.stringify(data, null, 2);
-      downloadBlob(new Blob([content], { type: "text/yaml" }), `kubeconfig-${clusterId}.yaml`);
-    },
-  });
-
-  const deleteCluster = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "k8s-cluster-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async (cluster: Cluster) => {
-      if (!cluster.id) throw new Error("缺少集群 ID");
-      await deleteK8sCluster(cluster.id);
-    },
-    onSuccess: () => {
-      resetPagination();
-      qc.invalidateQueries({ queryKey: ["k8s-clusters"] });
-    },
+  const { actions } = useK8sClusterActions(() => {
+    resetPagination();
+    qc.invalidateQueries({ queryKey: ["k8s-clusters"] });
   });
 
   const items = useMemo(() => (data?.items ?? []) as Cluster[], [data?.items]);
@@ -238,26 +201,7 @@ function ClusterList() {
           data={items}
           rowKey={(cluster) => cluster.id ?? cluster.name ?? ""}
           columns={columns}
-          rowActions={[
-            {
-              key: "kubeconfig",
-              label: "kubeconfig",
-              loading: () => downloadKubeconfig.isPending,
-              onClick: (cluster) => downloadKubeconfig.mutate(cluster),
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (cluster) =>
-                void Modal.confirm({
-                  title: "删除集群",
-                  content: `确定删除「${cluster.name ?? cluster.id}」？此操作不可恢复。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => deleteCluster.mutateAsync(cluster),
-                }),
-            },
-          ]}
+          rowActions={actions}
           rowSelection={{
             selectedRowKeys: selectedKeys,
             onChange: (keys) => setSelectedKeys(keys.map(String)),

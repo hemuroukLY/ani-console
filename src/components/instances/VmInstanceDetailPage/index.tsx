@@ -1,6 +1,6 @@
 import { withId } from "@/lib/id";
 import { getInstance, type InstanceRecord } from "@/api/instances";
-import { Empty, Tooltip } from "@arco-design/web-react";
+import { Button, Empty, Space, Tooltip } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AliIcon,
@@ -15,7 +15,8 @@ import { InstanceLogs } from "@/components/instances/InstanceLogs";
 import { InstanceMetrics } from "@/components/instances/InstanceMetrics";
 import { InstanceOperations } from "@/components/instances/InstanceOperations";
 import { InstanceStorage } from "@/components/instances/InstanceStorage";
-import { VmInstanceActions } from "@/components/instances/VmInstanceActions";
+import { useVmInstanceActions } from "@/hooks/useVmInstanceActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
@@ -69,6 +70,9 @@ export function VmInstanceDetailPage({
     queryKey: ["vm-instance", instanceId],
     queryFn: () => getInstance(instanceId),
   });
+  const refreshDetail = () => void detail.refetch();
+  const { actions, dialogNode } = useVmInstanceActions(refreshDetail, goBack);
+  const primaryAction = actions.find((action) => action.key === "console");
   if (!detail.data) {
     return <DetailPagePlaceholder loading={detail.isLoading} />;
   }
@@ -162,7 +166,6 @@ export function VmInstanceDetailPage({
       id: reference,
     }),
   );
-  const refreshDetail = () => void detail.refetch();
 
   return (
     <>
@@ -173,12 +176,20 @@ export function VmInstanceDetailPage({
         icon={<AliIcon name="yunzhuji" size={28} />}
         headerItems={[{ label: "CPU / 内存", value: specLabel(instance) }]}
         actions={
-          <VmInstanceActions
-            instance={instance}
-            display="detail"
-            onOperationSubmitted={refreshDetail}
-            onDeleted={goBack}
-          />
+          <Space>
+            <Button
+              type="primary"
+              disabled={!primaryAction || primaryAction.disabled?.(instance)}
+              loading={primaryAction?.loading?.(instance)}
+              onClick={() => primaryAction?.onClick(instance)}
+            >
+              打开控制台
+            </Button>
+            <ResourceActionMenu
+              record={instance}
+              actions={actions.filter((action) => action.key !== "console")}
+            />
+          </Space>
         }
         cards={[
           {
@@ -251,12 +262,24 @@ export function VmInstanceDetailPage({
           {
             key: "storage",
             label: "存储挂载",
-            content: <InstanceStorage instance={instance} onChanged={refreshDetail} />,
+            content: (
+              <InstanceStorage
+                instance={instance}
+                mountVolume={actions.find((action) => action.key === "attach-volume")}
+                mountFilesystem={actions.find((action) => action.key === "attach-filesystem")}
+              />
+            ),
           },
           {
             key: "snapshots",
             label: "快照",
-            content: <VmInstanceSnapshots instance={instance} onChanged={refreshDetail} />,
+            content: (
+              <VmInstanceSnapshots
+                instance={instance}
+                onChanged={refreshDetail}
+                createAction={actions.find((action) => action.key === "snapshot")}
+              />
+            ),
           },
           {
             key: "monitoring",
@@ -284,6 +307,7 @@ export function VmInstanceDetailPage({
         onTabChange={(key) => onTabChange(key as ComputeInstanceDetailTabKey)}
         onBack={goBack}
       />
+      {dialogNode}
     </>
   );
 }

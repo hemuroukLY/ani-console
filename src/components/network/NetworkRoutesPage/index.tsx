@@ -1,9 +1,10 @@
+import { useNetworkRouteActions } from "@/hooks/useNetworkRouteActions";
+
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Modal, Select } from "@arco-design/web-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, Select } from "@arco-design/web-react";
 import { useMemo, useState } from "react";
 import {
-  deleteNetworkRoute,
   listNetworkRoutes,
   listNetworkVpcs,
   type NetworkRoute,
@@ -66,20 +67,9 @@ export function NetworkRoutesPage() {
     queryKey: ["network-vpcs", "route-list"],
     queryFn: () => listNetworkVpcs({ limit: 100 }),
   });
-  const deleteRoute = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "route-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: NetworkRoute) => deleteNetworkRoute(item.id),
-    onSuccess: () => {
-      resetPagination();
-      qc.invalidateQueries({ queryKey: ["network-routes"] });
-    },
+  const { actions } = useNetworkRouteActions(() => {
+    resetPagination();
+    qc.invalidateQueries({ queryKey: ["network-routes"] });
   });
 
   const items = (routes.data?.items ?? []) as NetworkRoute[];
@@ -210,21 +200,7 @@ export function NetworkRoutesPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              loading: (item) => deleteRoute.isPending && deleteRoute.variables?.id === item.id,
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除路由",
-                  content: `确定删除「${item.description?.trim() || item.destination_cidr}」？删除后该转发规则将立即失效。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => deleteRoute.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={routes.isFetching || vpcs.isFetching}
           emptyIconClassName="icon-VPCluyouqi"
           emptyText={

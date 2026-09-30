@@ -12,7 +12,7 @@ import {
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
-import { useGpuInstanceRowActions } from "./GpuInstanceRowActions";
+import { useGpuInstanceActions } from "@/hooks/useGpuInstanceActions";
 
 type Instance = InstanceRecord;
 type StatusFilter = "all" | FilterableInstanceState;
@@ -48,7 +48,7 @@ export function GpuInstancesPage() {
   useEffect(() => {
     setPage(1);
   }, [keyword, searchField, status, setPage]);
-  const { dialogNode, rowActions } = useGpuInstanceRowActions(refresh);
+  const { dialogNode, actions } = useGpuInstanceActions(refresh);
 
   const allItems = (query.data?.items ?? []) as Instance[];
   const items = allItems;
@@ -183,7 +183,7 @@ export function GpuInstancesPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={rowActions}
+          rowActions={actions}
           loading={query.isFetching}
           emptyIconClassName="icon-GPU"
           emptyText={

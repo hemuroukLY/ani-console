@@ -1,6 +1,6 @@
 import { withId } from "@/lib/id";
 import { getInstance, type InstanceRecord } from "@/api/instances";
-import { Empty, Space, Tooltip } from "@arco-design/web-react";
+import { Button, Empty, Space, Tooltip } from "@arco-design/web-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import {
@@ -13,7 +13,8 @@ import {
 } from "@/components/common";
 import { InstanceLogs } from "@/components/instances/InstanceLogs";
 import { InstanceVersions } from "@/components/instances/InstanceVersions";
-import { GpuInstanceActions } from "@/components/instances/GpuInstanceActions";
+import { useGpuInstanceActions } from "@/hooks/useGpuInstanceActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
@@ -58,6 +59,12 @@ export function GpuInstanceDetailPage({
     queryKey: ["gpu-instance", instanceId],
     queryFn: () => getInstance(instanceId),
   });
+  const refreshInstance = () => {
+    void detail.refetch();
+    void queryClient.invalidateQueries({ queryKey: ["gpu-instances"] });
+  };
+  const { actions, dialogNode } = useGpuInstanceActions(refreshInstance, goBack);
+  const primaryAction = actions.find((action) => action.key === "terminal");
   if (!detail.data) {
     return <DetailPagePlaceholder loading={detail.isLoading} />;
   }
@@ -93,10 +100,7 @@ export function GpuInstanceDetailPage({
     : "-";
   const securityGroups = instance.network?.security_groups ?? [];
   const loadBalancerRefs = instance.network?.load_balancer_refs ?? [];
-  const refreshInstance = () => {
-    void detail.refetch();
-    void queryClient.invalidateQueries({ queryKey: ["gpu-instances"] });
-  };
+  const rollbackAction = actions.find((action) => action.key === "rollback");
   const relatedItems: Array<{
     key: string;
     kind: string;
@@ -180,180 +184,204 @@ export function GpuInstanceDetailPage({
   );
 
   return (
-    <DetailPageFrame
-      breadcrumbs={[...navigationBreadcrumbsForPath("/gpu-instances"), { label: instance.name }]}
-      title={instance.name}
-      status={<StatusBadge status={instance.state} reason={instance.reason} />}
-      icon={<AliIcon name="GPUrongqishili" size={28} />}
-      headerItems={[{ label: "GPU", value: gpuLabel(instance) }]}
-      actions={
-        <Space>
-          <GpuInstanceActions
-            instance={instance}
-            display="detail"
-            onChanged={refreshInstance}
-            onDeleted={goBack}
-          />
-        </Space>
-      }
-      cards={[
-        {
-          key: "basic",
-          title: "基本信息",
-          fields: [
-            { label: "ID", value: <ResourceId value={instance.id} /> },
-            {
-              label: "终止保护",
-              value: instance.termination_protection ? "已开启" : "未开启",
-            },
-            {
-              label: "规格",
-              value: gpuModel ? `${gpuCount}×${gpuModel}` : "-",
-            },
-            { label: "镜像", value: <ImageNameText image={instance.image} /> },
-            { label: "Provider", value: instance.provider },
-            { label: "节点", value: nodeName },
-            { label: "CPU / 内存", value: cpuMemory },
-            { label: "GPU", value: gpuLabel(instance) },
-            {
-              label: "副本",
-              value: instance.container
-                ? `${instance.container.ready_replicas} / ${instance.container.replicas}`
-                : "-",
-            },
-            {
-              label: "修订 / 发布",
-              value: instance.container
-                ? [
-                    instance.container.revision,
-                    instance.container.rollout_status
-                      ? (rolloutLabels[instance.container.rollout_status] ??
-                        instance.container.rollout_status)
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || "-"
-                : "-",
-            },
-            {
-              label: "Workload Identity",
-              value: workloadIdentityLabel,
-            },
-            {
-              label: "负载均衡",
-              value: loadBalancerRefs.length ? loadBalancerRefs.join("、") : "-",
-            },
-            {
-              label: "调用地址",
-              value: instance.endpoint ? (
-                <a
-                  href={instance.endpoint}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="break-all text-[rgb(var(--link-6))]"
-                >
-                  {instance.endpoint}
-                </a>
-              ) : (
-                "-"
-              ),
-            },
-            {
-              label: "安全组",
-              value: securityGroups.length
-                ? securityGroups.map((group) => group.name ?? group.id).join("、")
-                : "-",
-            },
-            { label: "创建时间", value: formatDateTime(instance.created_at) },
-            {
-              label: "关联对象",
-              value: (
-                <span>
-                  <strong>{relatedItems.length}</strong> 个
-                </span>
-              ),
-            },
-          ],
-        },
-        {
-          key: "related-summary",
-          title: "关联摘要",
-          fields: relatedItems.length
-            ? relatedItems.map((item) => {
-                const summary = `${item.name}${
-                  item.id && item.id !== item.name ? ` · ${item.id}` : ""
-                }`;
-                return {
-                  label: item.kind,
-                  value: (
-                    <Tooltip content={summary}>
-                      <span className="block min-w-0 truncate">{summary}</span>
-                    </Tooltip>
-                  ),
-                };
-              })
-            : [{ label: "暂无关联对象", value: "-" }],
-        },
-      ]}
-      tabs={[
-        {
-          key: "release",
-          label: "版本",
-          content: <InstanceVersions instance={instance} onChanged={refreshInstance} />,
-        },
-        {
-          key: "configuration",
-          label: "配置",
-          content: <InstanceConfiguration instance={instance} onChanged={() => detail.refetch()} />,
-        },
-        {
-          key: "storage",
-          label: "数据卷",
-          content: <InstanceStorage instance={instance} onChanged={() => detail.refetch()} />,
-        },
-        {
-          key: "network",
-          label: "网络",
-          content: <InstanceNetwork instance={instance} />,
-        },
-        {
-          key: "monitoring",
-          label: "资源监控",
-          content: <InstanceMetrics instanceId={instance.id} instanceKind="gpu_container" />,
-        },
-        {
-          key: "gpu-metrics",
-          label: "GPU 指标",
-          content: (
-            <InstanceMetrics
-              instanceId={instance.id}
-              instanceKind="gpu_container"
-              gpuOnly
-              gpuModel={instance.gpu?.model ?? instance.compute?.gpu_type}
-              gpuCount={instance.gpu?.count}
+    <>
+      <DetailPageFrame
+        breadcrumbs={[...navigationBreadcrumbsForPath("/gpu-instances"), { label: instance.name }]}
+        title={instance.name}
+        status={<StatusBadge status={instance.state} reason={instance.reason} />}
+        icon={<AliIcon name="GPUrongqishili" size={28} />}
+        headerItems={[{ label: "GPU", value: gpuLabel(instance) }]}
+        actions={
+          <Space>
+            <Button
+              type="primary"
+              disabled={!primaryAction || primaryAction.disabled?.(instance)}
+              loading={primaryAction?.loading?.(instance)}
+              onClick={() => primaryAction?.onClick(instance)}
+            >
+              远程终端
+            </Button>
+            <ResourceActionMenu
+              record={instance}
+              actions={actions.filter((action) => action.key !== "terminal")}
             />
-          ),
-        },
-        {
-          key: "logs",
-          label: "日志",
-          content: <InstanceLogs instanceId={instance.id} active />,
-        },
-        {
-          key: "events",
-          label: "事件",
-          content: <InstanceEvents instanceId={instance.id} />,
-        },
-        {
-          key: "operations",
-          label: "操作记录",
-          content: <InstanceOperations instanceId={instance.id} />,
-        },
-      ]}
-      defaultTabKey="release"
-      activeTabKey={tab}
-      onTabChange={(key) => onTabChange(key as GpuInstanceDetailTabKey)}
-      onBack={goBack}
-    />
+          </Space>
+        }
+        cards={[
+          {
+            key: "basic",
+            title: "基本信息",
+            fields: [
+              { label: "ID", value: <ResourceId value={instance.id} /> },
+              {
+                label: "终止保护",
+                value: instance.termination_protection ? "已开启" : "未开启",
+              },
+              {
+                label: "规格",
+                value: gpuModel ? `${gpuCount}×${gpuModel}` : "-",
+              },
+              { label: "镜像", value: <ImageNameText image={instance.image} /> },
+              { label: "Provider", value: instance.provider },
+              { label: "节点", value: nodeName },
+              { label: "CPU / 内存", value: cpuMemory },
+              { label: "GPU", value: gpuLabel(instance) },
+              {
+                label: "副本",
+                value: instance.container
+                  ? `${instance.container.ready_replicas} / ${instance.container.replicas}`
+                  : "-",
+              },
+              {
+                label: "修订 / 发布",
+                value: instance.container
+                  ? [
+                      instance.container.revision,
+                      instance.container.rollout_status
+                        ? (rolloutLabels[instance.container.rollout_status] ??
+                          instance.container.rollout_status)
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "-"
+                  : "-",
+              },
+              {
+                label: "Workload Identity",
+                value: workloadIdentityLabel,
+              },
+              {
+                label: "负载均衡",
+                value: loadBalancerRefs.length ? loadBalancerRefs.join("、") : "-",
+              },
+              {
+                label: "调用地址",
+                value: instance.endpoint ? (
+                  <a
+                    href={instance.endpoint}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="break-all text-[rgb(var(--link-6))]"
+                  >
+                    {instance.endpoint}
+                  </a>
+                ) : (
+                  "-"
+                ),
+              },
+              {
+                label: "安全组",
+                value: securityGroups.length
+                  ? securityGroups.map((group) => group.name ?? group.id).join("、")
+                  : "-",
+              },
+              { label: "创建时间", value: formatDateTime(instance.created_at) },
+              {
+                label: "关联对象",
+                value: (
+                  <span>
+                    <strong>{relatedItems.length}</strong> 个
+                  </span>
+                ),
+              },
+            ],
+          },
+          {
+            key: "related-summary",
+            title: "关联摘要",
+            fields: relatedItems.length
+              ? relatedItems.map((item) => {
+                  const summary = `${item.name}${
+                    item.id && item.id !== item.name ? ` · ${item.id}` : ""
+                  }`;
+                  return {
+                    label: item.kind,
+                    value: (
+                      <Tooltip content={summary}>
+                        <span className="block min-w-0 truncate">{summary}</span>
+                      </Tooltip>
+                    ),
+                  };
+                })
+              : [{ label: "暂无关联对象", value: "-" }],
+          },
+        ]}
+        tabs={[
+          {
+            key: "release",
+            label: "版本",
+            content: (
+              <InstanceVersions
+                instance={instance}
+                onChanged={refreshInstance}
+                updateImage={actions.find((action) => action.key === "update_image")}
+                rollbackDisabled={!rollbackAction || Boolean(rollbackAction.disabled?.(instance))}
+              />
+            ),
+          },
+          {
+            key: "configuration",
+            label: "配置",
+            content: (
+              <InstanceConfiguration instance={instance} onChanged={() => detail.refetch()} />
+            ),
+          },
+          {
+            key: "storage",
+            label: "数据卷",
+            content: (
+              <InstanceStorage
+                instance={instance}
+                mountVolume={actions.find((action) => action.key === "attach_volume")}
+                mountFilesystem={actions.find((action) => action.key === "attach_filesystem")}
+              />
+            ),
+          },
+          {
+            key: "network",
+            label: "网络",
+            content: <InstanceNetwork instance={instance} />,
+          },
+          {
+            key: "monitoring",
+            label: "资源监控",
+            content: <InstanceMetrics instanceId={instance.id} instanceKind="gpu_container" />,
+          },
+          {
+            key: "gpu-metrics",
+            label: "GPU 指标",
+            content: (
+              <InstanceMetrics
+                instanceId={instance.id}
+                instanceKind="gpu_container"
+                gpuOnly
+                gpuModel={instance.gpu?.model ?? instance.compute?.gpu_type}
+                gpuCount={instance.gpu?.count}
+              />
+            ),
+          },
+          {
+            key: "logs",
+            label: "日志",
+            content: <InstanceLogs instanceId={instance.id} active />,
+          },
+          {
+            key: "events",
+            label: "事件",
+            content: <InstanceEvents instanceId={instance.id} />,
+          },
+          {
+            key: "operations",
+            label: "操作记录",
+            content: <InstanceOperations instanceId={instance.id} />,
+          },
+        ]}
+        defaultTabKey="release"
+        activeTabKey={tab}
+        onTabChange={(key) => onTabChange(key as GpuInstanceDetailTabKey)}
+        onBack={goBack}
+      />
+      {dialogNode}
+    </>
   );
 }

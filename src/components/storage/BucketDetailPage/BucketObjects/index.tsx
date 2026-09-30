@@ -1,19 +1,16 @@
+import { useBucketUpload } from "@/hooks/useBucketUpload";
+import { useObjectActions } from "@/hooks/useObjectActions";
 import {
-  deleteBucketObject,
-  generateBucketObjectPresignedUrl,
   listBucketObjects,
   type StorageBucketObjectEntry,
   type StorageBucketRecord,
 } from "@/api/storage/buckets";
-import { uploadStorageObjectFile } from "@/api/storage/objects";
 import { ObjectBrowser } from "@/components/storage/ObjectBrowser";
-import { openExternalUrl } from "@/lib/browser";
-import { copyToClipboard } from "@/lib/clipboard";
 import { withId } from "@/lib/id";
-import { Button, Modal, Upload } from "@arco-design/web-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Upload } from "@arco-design/web-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { BucketFolderCreateModal } from "./BucketFolderCreateModal";
+import { BucketFolderCreateModal } from "@/components/storage/BucketFolderCreateModal";
 
 export function BucketObjects({
   bucketId,
@@ -23,8 +20,9 @@ export function BucketObjects({
   bucket: StorageBucketRecord;
 }) {
   const qc = useQueryClient();
-  const [prefix, setPrefix] = useState("/");
   const [folderVisible, setFolderVisible] = useState(false);
+  const [prefix, setPrefix] = useState("/");
+
   const objects = useQuery({
     meta: {
       errorNotification: {
@@ -37,69 +35,21 @@ export function BucketObjects({
     queryFn: () => listBucketObjects(bucketId, { prefix, limit: 100 }),
   });
   const entries = (objects.data?.items ?? []) as StorageBucketObjectEntry[];
-  const refresh = () => {
-    void qc.invalidateQueries({ queryKey: ["bucket", bucketId] });
-    void qc.invalidateQueries({ queryKey: ["bucket-objects", bucketId] });
-    void qc.invalidateQueries({ queryKey: ["buckets"] });
-  };
-  const upload = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "object-upload",
-        action: "上传",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (file: File) => uploadStorageObjectFile({ bucketId, file, prefix }),
-    onSuccess: refresh,
-  });
-  const deleteEntry = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "object-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (entry: StorageBucketObjectEntry) => deleteBucketObject(bucketId, entry.key),
-    onSuccess: refresh,
-  });
-  const generateLink = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "object-link",
-        action: "生成",
-        successText: "临时链接已生成",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async ({
-      entry,
-      action: linkAction,
-    }: {
-      entry: StorageBucketObjectEntry;
-      action: "download" | "copy";
-    }) => {
-      const data = await generateBucketObjectPresignedUrl(bucketId, {
-        key: entry.key,
-        method: "GET",
-        expires_hours: 24,
-      });
-      return { data, action: linkAction };
-    },
-    onSuccess: async ({ data, action: linkAction }) => {
-      if (!data?.download_url) return;
-      if (linkAction === "download") {
-        openExternalUrl(data.download_url);
-        return;
-      }
-      await copyToClipboard(data.download_url, "临时链接");
-    },
-  });
-
+  const { actions } = useObjectActions(bucketId);
+  const upload = useBucketUpload(bucketId, prefix);
+  const dialogNode = folderVisible ? (
+    <BucketFolderCreateModal
+      bucketId={bucketId}
+      prefix={prefix}
+      onCancel={() => setFolderVisible(false)}
+      onCreated={() => {
+        void qc.invalidateQueries({ queryKey: ["bucket", bucketId] });
+        void qc.invalidateQueries({ queryKey: ["bucket-objects", bucketId] });
+        void qc.invalidateQueries({ queryKey: ["buckets"] });
+      }}
+    />
+  ) : null;
+  const openFolder = () => setFolderVisible(true);
   const aclLabel = bucket.acl === "tenant_read" ? "租户内读" : "私有";
   return (
     <>
@@ -109,7 +59,7 @@ export function BucketObjects({
         entries={entries}
         aclLabel={aclLabel}
         loading={objects.isLoading}
-        actionLoading={generateLink.isPending}
+        actions={actions}
         primaryAction={
           <Upload
             showUploadList={false}
@@ -123,27 +73,9 @@ export function BucketObjects({
         onNavigate={(target) => {
           setPrefix(target);
         }}
-        onCreateFolder={() => setFolderVisible(true)}
-        onCopyPath={(entry) => copyToClipboard(entry.key, "对象路径")}
-        onDownload={(entry) => generateLink.mutateAsync({ entry, action: "download" })}
-        onCopyLink={(entry) => generateLink.mutateAsync({ entry, action: "copy" })}
-        onDelete={(entry) =>
-          Modal.confirm({
-            title: entry.kind === "prefix" ? "删除文件夹" : "删除对象",
-            content: `确定删除「${entry.key}」？`,
-            okButtonProps: { status: "danger" },
-            onOk: () => deleteEntry.mutateAsync(entry),
-          })
-        }
+        onCreateFolder={openFolder}
       />
-      {folderVisible && (
-        <BucketFolderCreateModal
-          bucketId={bucketId}
-          prefix={prefix}
-          onCancel={() => setFolderVisible(false)}
-          onCreated={refresh}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

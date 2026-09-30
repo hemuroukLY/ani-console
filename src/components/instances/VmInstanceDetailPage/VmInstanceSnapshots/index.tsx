@@ -1,35 +1,47 @@
-import type { InstanceRecord } from "@/api/instances";
+import { type InstanceRecord } from "@/api/instances";
 import { Button, Empty, Tooltip } from "@arco-design/web-react";
-import { useState } from "react";
-import { DataTable, ResourceNameId, StatusBadge } from "@/components/common";
-import { VmInstanceRollbackModal } from "@/components/instances/VmInstanceActions/VmInstanceRollbackModal";
-import { VmInstanceSnapshotModal } from "@/components/instances/VmInstanceActions/VmInstanceSnapshotModal";
+import { DataTable, ResourceNameId, StatusBadge, type RowAction } from "@/components/common";
 import { formatDateTime } from "@/lib/format";
+import { VmInstanceRollbackModal } from "@/components/instances/VmInstanceRollbackModal";
+import { useState } from "react";
 
 type VmInstance = InstanceRecord;
 type Snapshot = NonNullable<VmInstance["snapshots"]>[number];
 
-const BUSY_STATES = new Set<VmInstance["state"]>([
-  "pending",
-  "provisioning",
-  "starting",
-  "stopping",
-  "deleting",
-]);
-
 export function VmInstanceSnapshots({
   instance,
   onChanged,
+  createAction,
 }: {
   instance: VmInstance;
   onChanged: () => void;
+  createAction?: RowAction<VmInstance>;
 }) {
-  const [createVisible, setCreateVisible] = useState(false);
   const [rollbackSnapshot, setRollbackSnapshot] = useState<Snapshot>();
-  const busy = BUSY_STATES.has(instance.state);
-  const stable = instance.state === "running" || instance.state === "stopped";
-  const canCreate = stable && !busy;
-  const canRollback = stable && !busy;
+  const actions: RowAction<Snapshot>[] = [
+    {
+      key: "rollback",
+      label: "回滚",
+      disabled: (snapshot) =>
+        !createAction || Boolean(createAction.disabled?.(instance)) || snapshot.state !== "ready",
+      onClick: setRollbackSnapshot,
+    },
+  ];
+  const dialogNode = (
+    <>
+      {rollbackSnapshot && (
+        <VmInstanceRollbackModal
+          instance={instance}
+          snapshot={rollbackSnapshot}
+          onCancel={() => setRollbackSnapshot(undefined)}
+          onSubmitted={() => {
+            setRollbackSnapshot(undefined);
+            onChanged();
+          }}
+        />
+      )}
+    </>
+  );
 
   return (
     <>
@@ -38,7 +50,10 @@ export function VmInstanceSnapshots({
           header={{
             title: "快照",
             extra: (
-              <Button disabled={!canCreate} onClick={() => setCreateVisible(true)}>
+              <Button
+                disabled={!createAction || createAction.disabled?.(instance)}
+                onClick={() => createAction?.onClick(instance)}
+              >
                 创建快照
               </Button>
             ),
@@ -47,14 +62,7 @@ export function VmInstanceSnapshots({
           rowKey="id"
           pagination={false}
           noDataElement={<Empty description="暂无快照" />}
-          rowActions={[
-            {
-              key: "rollback",
-              label: "回滚",
-              disabled: (snapshot) => !canRollback || snapshot.state !== "ready",
-              onClick: setRollbackSnapshot,
-            },
-          ]}
+          rowActions={actions}
           columns={[
             {
               key: "name",
@@ -86,28 +94,7 @@ export function VmInstanceSnapshots({
         />
       </section>
 
-      {createVisible ? (
-        <VmInstanceSnapshotModal
-          instance={instance}
-          onCancel={() => setCreateVisible(false)}
-          onSubmitted={() => {
-            setCreateVisible(false);
-            onChanged();
-          }}
-        />
-      ) : null}
-
-      {rollbackSnapshot ? (
-        <VmInstanceRollbackModal
-          instance={instance}
-          snapshot={rollbackSnapshot}
-          onCancel={() => setRollbackSnapshot(undefined)}
-          onSubmitted={() => {
-            setRollbackSnapshot(undefined);
-            onChanged();
-          }}
-        />
-      ) : null}
+      {dialogNode}
     </>
   );
 }

@@ -1,13 +1,14 @@
+import { useBucketActions } from "@/hooks/useBucketActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
 import { AliIcon, DetailPageFrame, DetailPagePlaceholder, ResourceId } from "@/components/common";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Dropdown, Menu, Tag } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useState } from "react";
+import { Tag } from "@arco-design/web-react";
+
 import { getBucket, type StorageBucketRecord } from "@/api/storage/buckets";
 
 import { BucketAclEditor } from "@/components/storage/BucketAclEditor";
-import { BucketStorageClassModal } from "@/components/storage/BucketStorageClassModal";
+
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
@@ -25,8 +26,8 @@ export function BucketDetailPage({
   tab?: "objects" | "permissions" | "lifecycle" | "access" | "overview";
 }) {
   const goBack = useBackOrFallback("bucket");
-  const [storageClassVisible, setStorageClassVisible] = useState(false);
 
+  const { actions, dialogNode } = useBucketActions(goBack);
   const bucket = useQuery({
     meta: {
       errorNotification: {
@@ -56,26 +57,7 @@ export function BucketDetailPage({
             value: String(bucketInfo.object_count ?? 0),
           },
         ]}
-        actions={
-          <Dropdown
-            trigger="click"
-            position="br"
-            droplist={
-              <Menu
-                onClickMenuItem={(key) => {
-                  if (key !== "storage-class") return;
-                  setStorageClassVisible(true);
-                }}
-              >
-                <Menu.Item key="storage-class">存储类型</Menu.Item>
-              </Menu>
-            }
-          >
-            <Button aria-label="更多操作" title="更多操作">
-              <IconMoreVertical />
-            </Button>
-          </Dropdown>
-        }
+        actions={<ResourceActionMenu record={bucketInfo} actions={actions} />}
         cards={[
           {
             key: "basic",
@@ -126,12 +108,7 @@ export function BucketDetailPage({
         ]}
         onBack={goBack}
       />
-      {storageClassVisible && (
-        <BucketStorageClassModal
-          bucket={bucketInfo}
-          onCancel={() => setStorageClassVisible(false)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

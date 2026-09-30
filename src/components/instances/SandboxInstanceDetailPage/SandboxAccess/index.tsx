@@ -1,15 +1,15 @@
 import {
-  deleteSandboxPort,
   type InstanceRecord,
   type SandboxInstanceStatus,
+  deleteSandboxPort,
 } from "@/api/instances";
-import { DataTable, StatusBadge } from "@/components/common";
+import { DataTable, StatusBadge, type RowAction } from "@/components/common";
+import { Button, Empty, Space, Typography, Modal } from "@arco-design/web-react";
 import { copyToClipboard } from "@/lib/clipboard";
-import { Button, Empty, Modal, Space, Typography } from "@arco-design/web-react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { SandboxPortOpenModal } from "./SandboxPortOpenModal";
-import { SandboxTokenIssueModal } from "./SandboxTokenIssueModal";
+import { SandboxPortOpenModal } from "@/components/instances/SandboxPortOpenModal";
+import { SandboxTokenIssueModal } from "@/components/instances/SandboxTokenIssueModal";
 
 type SandboxInstance = InstanceRecord;
 type SandboxStatus = NonNullable<SandboxInstanceStatus>;
@@ -23,6 +23,7 @@ export function SandboxAccess({
   onChanged: () => void;
 }) {
   const sandbox = instance.sandbox!;
+
   const [tokenVisible, setTokenVisible] = useState(false);
   const [portVisible, setPortVisible] = useState(false);
   const running = sandbox.session_state === "running";
@@ -57,17 +58,49 @@ export function SandboxAccess({
     });
   };
 
+  const actions: RowAction<SandboxPortSummary>[] = [
+    {
+      key: "copy",
+      label: "复制",
+      disabled: (item) => !item.preview_url,
+      onClick: (item) => {
+        if (item.preview_url) void copyToClipboard(item.preview_url, "预览地址");
+      },
+    },
+    {
+      key: "close",
+      label: "关闭",
+      intent: "danger",
+      disabled: () => closePort.isPending,
+      onClick: (item) => confirmClosePort(item.port),
+    },
+  ];
+  const dialogNode = (
+    <>
+      {tokenVisible && (
+        <SandboxTokenIssueModal instance={instance} onCancel={() => setTokenVisible(false)} />
+      )}
+      {portVisible && (
+        <SandboxPortOpenModal
+          instance={instance}
+          onCancel={() => setPortVisible(false)}
+          onSuccess={onChanged}
+        />
+      )}
+    </>
+  );
+  const openPort = () => setPortVisible(true);
+  const openToken = () => setTokenVisible(true);
+  const portDisabled = !running || !portsAvailable;
+  const tokenDisabled = !running || !tokenAvailable;
+
   return (
     <>
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">
           <Typography.Title heading={6}>预览端口</Typography.Title>
           <Space>
-            <Button
-              size="small"
-              disabled={!running || !portsAvailable}
-              onClick={() => setPortVisible(true)}
-            >
+            <Button size="small" disabled={portDisabled} onClick={openPort}>
               打开预览
             </Button>
           </Space>
@@ -77,23 +110,7 @@ export function SandboxAccess({
           rowKey={(item) => String(item.port)}
           pagination={false}
           noDataElement={<Empty description="暂无预览端口" />}
-          rowActions={[
-            {
-              key: "copy",
-              label: "复制",
-              disabled: (item) => !item.preview_url,
-              onClick: (item) => {
-                if (item.preview_url) void copyToClipboard(item.preview_url, "预览地址");
-              },
-            },
-            {
-              key: "close",
-              label: "关闭",
-              intent: "danger",
-              disabled: () => closePort.isPending,
-              onClick: (item) => confirmClosePort(item.port),
-            },
-          ]}
+          rowActions={actions}
           columns={[
             {
               title: "端口",
@@ -138,11 +155,7 @@ export function SandboxAccess({
         <section>
           <div className="mb-3 flex items-center justify-between gap-3">
             <Typography.Title heading={6}>短期连接令牌</Typography.Title>
-            <Button
-              size="small"
-              disabled={!running || !tokenAvailable}
-              onClick={() => setTokenVisible(true)}
-            >
+            <Button size="small" disabled={tokenDisabled} onClick={openToken}>
               签发令牌
             </Button>
           </div>
@@ -152,16 +165,7 @@ export function SandboxAccess({
         </section>
       </Space>
 
-      {tokenVisible && (
-        <SandboxTokenIssueModal instance={instance} onCancel={() => setTokenVisible(false)} />
-      )}
-      {portVisible && (
-        <SandboxPortOpenModal
-          instance={instance}
-          onCancel={() => setPortVisible(false)}
-          onSuccess={onChanged}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

@@ -1,20 +1,10 @@
-import {
-  applyInferenceServiceLifecycle,
-  deleteInferenceService,
-  getInferenceService,
-  listInferenceServicePolicies,
-} from "@/api/ai-services/inference";
-import {
-  Link as ArcoLink,
-  Button,
-  Dropdown,
-  Menu,
-  Modal,
-  Space,
-  Typography,
-} from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+import { useInferenceActions } from "@/hooks/useInferenceActions";
+
+import { getInferenceService, listInferenceServicePolicies } from "@/api/ai-services/inference";
+import { Link as ArcoLink, Button, Space, Typography } from "@arco-design/web-react";
+
+import { useQuery } from "@tanstack/react-query";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 import { useState } from "react";
 
@@ -36,14 +26,10 @@ import { InferenceLogs } from "./InferenceLogs";
 import { InferenceMonitoring } from "./InferenceMonitoring";
 import { InferencePolicies } from "./InferencePolicies";
 import { InferenceRelatedResources } from "./InferenceRelatedResources";
-import { InferenceScaleModal } from "./InferenceScaleModal";
-
-type LifecycleAction = "start" | "stop" | "restart";
 
 export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
   const goBack = useBackOrFallback("inference-service");
-  const qc = useQueryClient();
-  const [scaleVisible, setScaleVisible] = useState(false);
+  const { actions, dialogNode } = useInferenceActions(goBack);
   const [activeTabKey, setActiveTabKey] = useState("related");
 
   const service = useQuery({
@@ -68,41 +54,6 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
     queryKey: ["inference-service-policies", serviceId],
     enabled: Boolean(service.data),
     queryFn: () => listInferenceServicePolicies(serviceId),
-  });
-
-  const lifecycle = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "inference-lifecycle",
-        action: "操作",
-        successText: "生命周期操作已提交",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async (action: LifecycleAction) => {
-      const submitData = { action };
-      return applyInferenceServiceLifecycle(serviceId, submitData);
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey: ["inference-service", serviceId],
-      });
-      void qc.invalidateQueries({ queryKey: ["inference-services"] });
-    },
-  });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "inference-delete",
-        action: "删除",
-        successText: "删除操作已提交",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: () => deleteInferenceService(serviceId),
-    onSuccess: goBack,
   });
 
   if (!service.data) {
@@ -130,75 +81,6 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
     ? "QPS 加载中…"
     : `QPS ${requestPolicy?.rate_limits.qps ?? "-"}`;
   const serviceStatus = <InferenceStatusTag {...item} />;
-  const actions = (
-    <Dropdown
-      trigger="click"
-      position="br"
-      droplist={
-        <Menu>
-          {item.status === "running" ? (
-            <Menu.Item
-              key="stop"
-              disabled={lifecycle.isPending}
-              onClick={() => lifecycle.mutate("stop")}
-            >
-              停止
-            </Menu.Item>
-          ) : null}
-          {item.status === "stopped" ? (
-            <Menu.Item
-              key="start"
-              disabled={lifecycle.isPending}
-              onClick={() => lifecycle.mutate("start")}
-            >
-              启动
-            </Menu.Item>
-          ) : null}
-          {item.status === "running" || item.status === "failed" ? (
-            <Menu.Item
-              key="restart"
-              disabled={lifecycle.isPending}
-              onClick={() => lifecycle.mutate("restart")}
-            >
-              重启
-            </Menu.Item>
-          ) : null}
-          {item.status === "running" ? (
-            <Menu.Item
-              key="scale"
-              disabled={lifecycle.isPending}
-              onClick={() => setScaleVisible(true)}
-            >
-              调整副本
-            </Menu.Item>
-          ) : null}
-          <Menu.Item
-            key="delete"
-            disabled={remove.isPending}
-            style={{ color: "var(--color-danger-6)" }}
-            onClick={() =>
-              Modal.confirm({
-                title: "删除推理服务",
-                content: `确定删除「${item.name}」？删除请求提交后将异步停止并清理该服务。`,
-                okButtonProps: { status: "danger" },
-                onOk: () => remove.mutateAsync(),
-              })
-            }
-          >
-            删除
-          </Menu.Item>
-        </Menu>
-      }
-    >
-      <Button
-        disabled={lifecycle.isPending || remove.isPending}
-        aria-label="更多操作"
-        title="更多操作"
-      >
-        <IconMoreVertical />
-      </Button>
-    </Dropdown>
-  );
 
   return (
     <>
@@ -213,7 +95,7 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
             value: `${item.ready_replicas} / ${item.replicas}`,
           },
         ]}
-        actions={actions}
+        actions={<ResourceActionMenu record={item} actions={actions} />}
         cards={[
           {
             key: "basic",
@@ -340,13 +222,7 @@ export function InferenceDetailPage({ serviceId }: { serviceId: string }) {
         onTabChange={setActiveTabKey}
         onBack={goBack}
       />
-      {scaleVisible && (
-        <InferenceScaleModal
-          serviceId={serviceId}
-          initialReplicas={item.replicas}
-          onCancel={() => setScaleVisible(false)}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

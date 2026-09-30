@@ -1,5 +1,7 @@
+import { useSubnetActions } from "@/hooks/useSubnetActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
 import {
-  deleteNetworkSubnet,
   getNetworkSubnet,
   getNetworkVpc,
   type NetworkSubnet,
@@ -13,9 +15,8 @@ import {
   StatusBadge,
 } from "@/components/common";
 import { withId } from "@/lib/id";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { useMutation, useQuery } from "@tanstack/react-query";
+
+import { useQuery } from "@tanstack/react-query";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
 
 import { formatDateTime } from "@/lib/format";
@@ -51,44 +52,12 @@ export function SubnetDetailPage({ subnetId }: { subnetId: string }) {
     queryFn: () => getNetworkVpc(detail.data!.vpc_id),
     enabled: Boolean(detail.data?.vpc_id),
   });
-  const deleteSubnet = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "subnet-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: () => deleteNetworkSubnet(subnetId),
-    onSuccess: goBack,
-  });
+  const { actions } = useSubnetActions(goBack);
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
   const subnet = detail.data as Subnet;
   const parentVpc = vpc.data as Vpc | undefined;
-  const moreMenu = (
-    <Menu
-      onClickMenuItem={(key) => {
-        if (key !== "delete") return;
-        Modal.confirm({
-          title: "删除子网",
-          content: `确定删除「${subnet.name}」？存在关联实例时无法删除，请先清理相关资源。`,
-          okButtonProps: { status: "danger" },
-          onOk: () => deleteSubnet.mutateAsync(undefined),
-        });
-      }}
-    >
-      <Menu.Item
-        key="delete"
-        disabled={deleteSubnet.isPending}
-        style={{ color: "var(--color-danger-6)" }}
-      >
-        删除
-      </Menu.Item>
-    </Menu>
-  );
 
   return (
     <DetailPageFrame
@@ -97,13 +66,7 @@ export function SubnetDetailPage({ subnetId }: { subnetId: string }) {
       status={<StatusBadge status={subnet.state} />}
       icon={<AliIcon name="VPCwangluo" size={28} />}
       headerItems={[{ label: "CIDR", value: subnet.cidr }]}
-      actions={
-        <Dropdown trigger="click" position="br" droplist={moreMenu}>
-          <Button disabled={deleteSubnet.isPending} aria-label="更多操作" title="更多操作">
-            <IconMoreVertical />
-          </Button>
-        </Dropdown>
-      }
+      actions={<ResourceActionMenu record={subnet} actions={actions} />}
       cards={[
         {
           key: "basic",

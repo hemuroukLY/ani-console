@@ -1,3 +1,6 @@
+import { useLoadBalancerActions } from "@/hooks/useLoadBalancerActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
 import { withId } from "@/lib/id";
 import {
   DetailPageFrame,
@@ -7,11 +10,9 @@ import {
   StatusBadge,
 } from "@/components/common";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
+import { useQuery } from "@tanstack/react-query";
+
 import {
-  deleteNetworkLoadBalancer,
   getNetworkLoadBalancer,
   getNetworkSubnet,
   getNetworkVpc,
@@ -68,18 +69,7 @@ export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: str
     queryFn: () => getNetworkSubnet(detail.data!.subnet_id!),
     enabled: Boolean(detail.data?.subnet_id),
   });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "load-balancer-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (_: undefined) => deleteNetworkLoadBalancer(loadBalancerId),
-    onSuccess: goBack,
-  });
+  const { actions } = useLoadBalancerActions(goBack);
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
   const item = detail.data as LoadBalancer;
   const parentVpc = vpc.data as Vpc | undefined;
@@ -114,35 +104,7 @@ export function LoadBalancerDetailPage({ loadBalancerId }: { loadBalancerId: str
       status={<StatusBadge status={item.state} />}
       icon={<AliIcon name="fuzaijunhengqi" size={28} />}
       headerItems={[{ label: "VIP", value: item.vip || "-" }]}
-      actions={
-        <Dropdown
-          trigger="click"
-          position="br"
-          droplist={
-            <Menu>
-              <Menu.Item
-                key="delete"
-                disabled={remove.isPending}
-                style={{ color: "var(--color-danger-6)" }}
-                onClick={() =>
-                  Modal.confirm({
-                    title: "删除负载均衡",
-                    content: `确定删除「${item.name}」？`,
-                    okButtonProps: { status: "danger" },
-                    onOk: () => remove.mutateAsync(undefined),
-                  })
-                }
-              >
-                删除
-              </Menu.Item>
-            </Menu>
-          }
-        >
-          <Button disabled={remove.isPending} aria-label="更多操作" title="更多操作">
-            <IconMoreVertical />
-          </Button>
-        </Dropdown>
-      }
+      actions={<ResourceActionMenu record={item} actions={actions} />}
       cards={[
         {
           key: "basic",

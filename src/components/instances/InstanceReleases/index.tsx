@@ -1,3 +1,4 @@
+import type { RowAction } from "@/components/common";
 import type { InstanceRecord } from "@/api/instances";
 import { Descriptions, Empty, Space, Tooltip, Typography } from "@arco-design/web-react";
 import type { ReactNode } from "react";
@@ -12,14 +13,12 @@ export function InstanceReleases({
   instance,
   actions,
   versionLayout = false,
-  onRollback,
-  rollbackRevision,
+  revisionActions,
 }: {
   instance: Instance;
   actions?: ReactNode;
   versionLayout?: boolean;
-  onRollback?: (release: Release) => void | Promise<unknown>;
-  rollbackRevision?: string;
+  revisionActions?: RowAction<Release>[];
 }) {
   const releases = instance.container?.history ?? [];
   const rolloutLabels: Record<string, string> = {
@@ -64,21 +63,7 @@ export function InstanceReleases({
             rowKey="revision"
             pagination={false}
             noDataElement={<Empty description="暂无版本记录" />}
-            rowActions={
-              onRollback
-                ? [
-                    {
-                      key: "rollback",
-                      label: "回滚到此版本",
-                      disabled: (release) => release.revision === currentRevision,
-                      loading: (release) => release.revision === rollbackRevision,
-                      tooltip: (release) =>
-                        release.revision === currentRevision ? "无法回退到当前版本" : undefined,
-                      onClick: onRollback,
-                    },
-                  ]
-                : undefined
-            }
+            rowActions={revisionActions}
             columns={[
               {
                 title: "版本",

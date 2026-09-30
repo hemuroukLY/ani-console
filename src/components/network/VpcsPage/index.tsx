@@ -1,9 +1,10 @@
+import { useVpcActions } from "@/hooks/useVpcActions";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Form, Input, Modal, Typography } from "@arco-design/web-react";
 import { useMemo, useState } from "react";
 import {
   createNetworkVpc,
-  deleteNetworkVpc,
   listNetworkRoutes,
   listNetworkSubnets,
   listNetworkVpcs,
@@ -120,22 +121,11 @@ function VpcList() {
     },
   });
 
-  const deleteVpc = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "vpc-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (vpc: Vpc) => deleteNetworkVpc(vpc.id),
-    onSuccess: () => {
-      resetPagination();
-      qc.invalidateQueries({ queryKey: ["network-vpcs"] });
-      qc.invalidateQueries({ queryKey: ["network-subnets"] });
-      qc.invalidateQueries({ queryKey: ["network-routes"] });
-    },
+  const { actions } = useVpcActions(() => {
+    resetPagination();
+    qc.invalidateQueries({ queryKey: ["network-vpcs"] });
+    qc.invalidateQueries({ queryKey: ["network-subnets"] });
+    qc.invalidateQueries({ queryKey: ["network-routes"] });
   });
 
   const items = useMemo(() => (vpcs.data?.items ?? []) as Vpc[], [vpcs.data?.items]);
@@ -256,20 +246,7 @@ function VpcList() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (vpc) =>
-                void Modal.confirm({
-                  title: "删除 VPC",
-                  content: `确定删除「${vpc.name}」？存在子网或关联资源时无法删除，请先清理相关资源。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => deleteVpc.mutateAsync(vpc),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={vpcs.isFetching}
           emptyIconClassName="icon-VPCwangluo"
           emptyText={

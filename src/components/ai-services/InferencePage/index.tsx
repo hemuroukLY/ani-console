@@ -1,13 +1,9 @@
-import { InputNumber, Modal, Select, Space, Typography } from "@arco-design/web-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInferenceActions } from "@/hooks/useInferenceActions";
+
+import { Select, Space } from "@arco-design/web-react";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import {
-  applyInferenceServiceLifecycle,
-  deleteInferenceService,
-  listInferenceServices,
-  updateInferenceService,
-  type InferenceService,
-} from "@/api/ai-services/inference";
+import { listInferenceServices, type InferenceService } from "@/api/ai-services/inference";
 
 import { CreateInferenceServiceModal } from "@/components/ai-services/CreateInferenceServiceModal";
 import { InferenceStatusTag } from "@/components/ai-services/InferenceStatusTag";
@@ -18,14 +14,12 @@ type StatusFilter = "all" | "pending" | "deploying" | "running" | "stopping" | "
 type SearchField = "name" | "id";
 
 export function InferencePage() {
-  const qc = useQueryClient();
+  const { actions, dialogNode } = useInferenceActions();
   const [createVisible, setCreateVisible] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("all");
   const [searchField, setSearchField] = useState<SearchField>("name");
   const [searchText, setSearchText] = useState("");
   const [model, setModel] = useState("all");
-  const [resizeTarget, setResizeTarget] = useState<InferenceService>();
-  const [replicas, setReplicas] = useState(1);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const services = useQuery({
@@ -49,66 +43,7 @@ export function InferencePage() {
       });
     },
   });
-  const lifecycle = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "inference-lifecycle",
-        action: "操作",
-        successText: "生命周期操作已提交",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async ({
-      item,
-      action,
-    }: {
-      item: InferenceService;
-      action: "start" | "stop" | "restart";
-    }) => {
-      const submitData = { action };
-      return applyInferenceServiceLifecycle(item.id, submitData);
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["inference-services"] });
-    },
-  });
-  const remove = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "inference-delete",
-        action: "删除",
-        successText: "删除操作已提交",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async (item: InferenceService) => {
-      return deleteInferenceService(item.id);
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["inference-services"] });
-    },
-  });
-  const resize = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "inference-resize",
-        action: "变配",
-        successText: "变配操作已提交",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: async (item: InferenceService) => {
-      const submitData = { replicas };
-      return updateInferenceService(item.id, submitData);
-    },
-    onSuccess: () => {
-      setResizeTarget(undefined);
-      void qc.invalidateQueries({ queryKey: ["inference-services"] });
-    },
-  });
+
   const items = useMemo(() => services.data?.items ?? [], [services.data?.items]);
   const modelOptions = useMemo(
     () =>
@@ -275,47 +210,7 @@ export function InferencePage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "lifecycle",
-              label: (item) => (item.status === "running" ? "停止" : "启动"),
-              widthLabel: "启动",
-              disabled: (item) =>
-                (item.status !== "running" && item.status !== "stopped") || lifecycle.isPending,
-              onClick: (item) =>
-                lifecycle.mutate({
-                  item,
-                  action: item.status === "running" ? "stop" : "start",
-                }),
-            },
-            {
-              key: "resize",
-              label: "变配",
-              disabled: (item) => item.status !== "running",
-              onClick: (item) => {
-                setReplicas(item.replicas);
-                setResizeTarget(item);
-              },
-            },
-            {
-              key: "update-model-binding-policy",
-              label: "更新模型绑定策略",
-              disabled: () => true,
-              onClick: () => undefined,
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除推理服务",
-                  content: `确定删除「${item.name}」？删除请求提交后将异步停止并清理该服务。`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => remove.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={services.isFetching}
           pagination={{
             page,
@@ -338,30 +233,7 @@ export function InferencePage() {
         />
       </ListPageFrame>
       {createVisible && <CreateInferenceServiceModal onCancel={() => setCreateVisible(false)} />}
-      <Modal
-        visible={Boolean(resizeTarget)}
-        title={resizeTarget ? `变配 · ${resizeTarget.name}` : "变配"}
-        onCancel={() => {
-          setResizeTarget(undefined);
-        }}
-        onOk={() => (resizeTarget ? resize.mutateAsync(resizeTarget) : undefined)}
-        confirmLoading={resize.isPending}
-        unmountOnExit
-      >
-        <Space direction="vertical" size={12} className="w-full">
-          <Typography.Text>期望副本数</Typography.Text>
-          <InputNumber
-            value={replicas}
-            onChange={(value) => setReplicas(value ?? 1)}
-            min={1}
-            precision={0}
-            className="w-full"
-          />
-          <Typography.Text type="secondary">
-            当前后端变配接口仅支持调整副本数，操作将异步执行。
-          </Typography.Text>
-        </Space>
-      </Modal>
+      {dialogNode}
     </>
   );
 }

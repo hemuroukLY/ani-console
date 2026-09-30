@@ -1,21 +1,21 @@
 import { withId } from "@/lib/id";
-import { deleteSandboxFile, listSandboxFiles, type SandboxFile } from "@/api/instances";
+import { listSandboxFiles, type SandboxFile, deleteSandboxFile } from "@/api/instances";
 import {
   Button,
   Empty,
   Input,
-  Modal,
   Space,
   Tag,
   Tooltip,
   Typography,
+  Modal,
 } from "@arco-design/web-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { DataTable } from "@/components/common";
+import { DataTable, type RowAction } from "@/components/common";
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { copyToClipboard } from "@/lib/clipboard";
-import { SandboxFileCreateModal } from "./SandboxFileCreateModal";
+import { SandboxFileCreateModal } from "@/components/instances/SandboxFileCreateModal";
 
 export function SandboxFiles({
   instanceId,
@@ -28,7 +28,6 @@ export function SandboxFiles({
 }) {
   const [directory, setDirectory] = useState(".");
   const [pathInput, setPathInput] = useState(".");
-  const [editorVisible, setEditorVisible] = useState(false);
 
   const files = useQuery({
     meta: {
@@ -41,6 +40,12 @@ export function SandboxFiles({
     queryKey: ["sandbox-files", instanceId, directory],
     queryFn: () => listSandboxFiles(instanceId, { path: directory, limit: 500 }),
   });
+  const openDirectory = (path: string) => {
+    setDirectory(path || ".");
+    setPathInput(path || ".");
+  };
+
+  const [editorVisible, setEditorVisible] = useState(false);
   const deleteFile = useMutation({
     meta: {
       feedback: {
@@ -61,11 +66,6 @@ export function SandboxFiles({
     },
   });
 
-  const openDirectory = (path: string) => {
-    setDirectory(path || ".");
-    setPathInput(path || ".");
-  };
-
   const confirmDelete = (item: SandboxFile) => {
     Modal.confirm({
       title: "删除工作区文件",
@@ -74,6 +74,40 @@ export function SandboxFiles({
       onOk: () => deleteFile.mutateAsync(item.path),
     });
   };
+
+  const actions: RowAction<SandboxFile>[] = [
+    {
+      key: "copy-path",
+      label: "复制路径",
+      visible: (item) => item.kind !== "directory",
+      onClick: (item) => void copyToClipboard(item.path, "文件路径"),
+    },
+    {
+      key: "delete",
+      label: "删除",
+      intent: "danger",
+      visible: (item) => item.kind !== "directory",
+      disabled: () => !running || deleteFile.isPending,
+      tooltip: !running ? "仅运行中的沙箱可以删除文件" : undefined,
+      onClick: confirmDelete,
+    },
+  ];
+  const dialogNode = (
+    <>
+      {editorVisible && (
+        <SandboxFileCreateModal
+          instanceId={instanceId}
+          directory={directory}
+          onCancel={() => setEditorVisible(false)}
+          onCreated={() => {
+            void files.refetch();
+            onChanged();
+          }}
+        />
+      )}
+    </>
+  );
+  const openCreate = () => setEditorVisible(true);
 
   return (
     <>
@@ -97,7 +131,7 @@ export function SandboxFiles({
             </Button>
             <Tooltip content="仅运行中的沙箱可以写入文件" disabled={running}>
               <span className="inline-flex">
-                <Button type="primary" disabled={!running} onClick={() => setEditorVisible(true)}>
+                <Button type="primary" disabled={!running} onClick={openCreate}>
                   新建文本文件
                 </Button>
               </span>
@@ -113,23 +147,7 @@ export function SandboxFiles({
             loading={files.isLoading || files.isFetching}
             pagination={false}
             noDataElement={<Empty description="当前目录为空" />}
-            rowActions={[
-              {
-                key: "copy-path",
-                label: "复制路径",
-                visible: (item) => item.kind !== "directory",
-                onClick: (item) => void copyToClipboard(item.path, "文件路径"),
-              },
-              {
-                key: "delete",
-                label: "删除",
-                intent: "danger",
-                visible: (item) => item.kind !== "directory",
-                disabled: () => !running || deleteFile.isPending,
-                tooltip: !running ? "仅运行中的沙箱可以删除文件" : undefined,
-                onClick: confirmDelete,
-              },
-            ]}
+            rowActions={actions}
             columns={[
               {
                 title: "路径",
@@ -161,17 +179,7 @@ export function SandboxFiles({
         </section>
       </Space>
 
-      {editorVisible && (
-        <SandboxFileCreateModal
-          instanceId={instanceId}
-          directory={directory}
-          onCancel={() => setEditorVisible(false)}
-          onCreated={() => {
-            void files.refetch();
-            onChanged();
-          }}
-        />
-      )}
+      {dialogNode}
     </>
   );
 }

@@ -1,12 +1,12 @@
-import { deleteNetworkSecurityGroupRule, listNetworkSecurityGroupRules } from "@/api/network";
-import { DataTable } from "@/components/common";
+import { listNetworkSecurityGroupRules, deleteNetworkSecurityGroupRule } from "@/api/network";
+import { DataTable, type RowAction } from "@/components/common";
 import {
-  SecurityGroupRuleModal,
   type SecurityGroupRuleResource,
+  SecurityGroupRuleModal,
 } from "@/components/network/SecurityGroupRuleModal";
 import { withId } from "@/lib/id";
-import { Button, Empty, Modal, Space, Tag, Typography } from "@arco-design/web-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Empty, Space, Tag, Typography, Modal } from "@arco-design/web-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 export function SecurityGroupRules({
@@ -16,8 +16,6 @@ export function SecurityGroupRules({
   securityGroupId: string;
   direction: SecurityGroupRuleResource["direction"];
 }) {
-  const qc = useQueryClient();
-  const [ruleEditor, setRuleEditor] = useState<SecurityGroupRuleResource | null | undefined>();
   const rules = useQuery({
     meta: {
       errorNotification: {
@@ -29,6 +27,9 @@ export function SecurityGroupRules({
     queryKey: ["network-security-group-rules", securityGroupId],
     queryFn: () => listNetworkSecurityGroupRules(securityGroupId, { limit: 100 }),
   });
+
+  const qc = useQueryClient();
+  const [ruleEditor, setRuleEditor] = useState<SecurityGroupRuleResource | null | undefined>();
   const deleteRule = useMutation({
     meta: {
       feedback: {
@@ -50,6 +51,35 @@ export function SecurityGroupRules({
       void qc.invalidateQueries({ queryKey: ["network-security-groups"] });
     },
   });
+  const actions: RowAction<SecurityGroupRuleResource>[] = [
+    { key: "edit", label: "编辑", onClick: setRuleEditor },
+    {
+      key: "delete",
+      label: "删除",
+      intent: "danger",
+      loading: (rule) => deleteRule.isPending && deleteRule.variables?.id === rule.id,
+      onClick: (rule) =>
+        void Modal.confirm({
+          title: "删除规则",
+          content: "确定删除这条安全组规则？",
+          okButtonProps: { status: "danger" },
+          onOk: () => deleteRule.mutateAsync(rule),
+        }),
+    },
+  ];
+  const dialogNode = (
+    <>
+      {ruleEditor !== undefined && (
+        <SecurityGroupRuleModal
+          securityGroupId={securityGroupId}
+          direction={direction}
+          rule={ruleEditor}
+          onCancel={() => setRuleEditor(undefined)}
+        />
+      )}
+    </>
+  );
+  const openCreate = () => setRuleEditor(null);
   const items = (rules.data?.items ?? []) as SecurityGroupRuleResource[];
   const directionRules = items.filter((rule) => rule.direction === direction);
 
@@ -60,28 +90,13 @@ export function SecurityGroupRules({
           共 <Typography.Text bold>{directionRules.length}</Typography.Text> 条
           {direction === "ingress" ? "入站" : "出站"}规则
         </Typography.Text>
-        <Button type="primary" onClick={() => setRuleEditor(null)}>
+        <Button type="primary" onClick={openCreate}>
           添加规则
         </Button>
       </div>
       <DataTable<SecurityGroupRuleResource>
         loading={rules.isLoading}
-        rowActions={[
-          { key: "edit", label: "编辑", onClick: setRuleEditor },
-          {
-            key: "delete",
-            label: "删除",
-            intent: "danger",
-            loading: (rule) => deleteRule.isPending && deleteRule.variables?.id === rule.id,
-            onClick: (rule) =>
-              void Modal.confirm({
-                title: "删除规则",
-                content: "确定删除这条安全组规则？",
-                okButtonProps: { status: "danger" },
-                onOk: () => deleteRule.mutateAsync(rule),
-              }),
-          },
-        ]}
+        rowActions={actions}
         columns={[
           { title: "优先级", dataIndex: "priority" },
           {
@@ -109,14 +124,7 @@ export function SecurityGroupRules({
           <Empty description={`暂无${direction === "ingress" ? "入站" : "出站"}规则`} />
         }
       />
-      {ruleEditor !== undefined && (
-        <SecurityGroupRuleModal
-          securityGroupId={securityGroupId}
-          direction={direction}
-          rule={ruleEditor}
-          onCancel={() => setRuleEditor(undefined)}
-        />
-      )}
+      {dialogNode}
     </Space>
   );
 }

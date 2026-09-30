@@ -1,26 +1,26 @@
+import { copyToClipboard } from "@/lib/clipboard";
 import {
   getFilesystemMountCommand,
   listFilesystemMountTargets,
   type FilesystemMountTarget,
 } from "@/api/storage/filesystems";
-import { DataTable, StatusBadge } from "@/components/common";
-import { CreateFilesystemMountTargetModal } from "@/components/storage/CreateFilesystemMountTargetModal";
-import { copyToClipboard } from "@/lib/clipboard";
+import { DataTable, StatusBadge, type RowAction } from "@/components/common";
+
 import { formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
 import { Button, Empty } from "@arco-design/web-react";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 export function FilesystemMountTargets({
   filesystemId,
   onMountCountChange,
+  onCreateMountTarget,
 }: {
   filesystemId: string;
+  onCreateMountTarget: () => void;
   onMountCountChange: (count: number) => void;
 }) {
-  const [visible, setVisible] = useState(false);
-  const [copyingId, setCopyingId] = useState<string>();
   const mounts = useQuery({
     meta: {
       errorNotification: {
@@ -33,32 +33,34 @@ export function FilesystemMountTargets({
     queryFn: () => listFilesystemMountTargets(filesystemId, { limit: 100 }),
   });
   const items = (mounts.data?.items ?? []) as FilesystemMountTarget[];
-  const mountCommand = useQuery({
+  const copyCommand = useMutation({
     meta: {
-      errorNotification: {
-        id: withId("filesystem-mount-command", filesystemId),
-        action: "挂载命令获取",
-        fallback: "挂载命令获取失败",
+      feedback: {
+        channel: "notification",
+        id: "filesystem-mount-command",
+        action: "获取挂载命令",
+        errorFallback: "请求失败",
       },
     },
-    queryKey: ["filesystem-mount-command", filesystemId],
-    queryFn: () => getFilesystemMountCommand(filesystemId),
-    enabled: false,
-  });
-  const copyMountCommand = async (target: FilesystemMountTarget) => {
-    setCopyingId(target.id);
-    try {
-      const result = await mountCommand.refetch();
-      if (!result.isSuccess || !result.data.command) return;
+    mutationFn: async (target: FilesystemMountTarget) => {
+      const data = await getFilesystemMountCommand(filesystemId);
+      if (!data.command) throw new Error("未返回挂载命令");
       const command =
-        result.data.ip_address && result.data.ip_address !== target.ip_address
-          ? result.data.command.replace(result.data.ip_address, target.ip_address)
-          : result.data.command;
+        data.ip_address && data.ip_address !== target.ip_address
+          ? data.command.replace(data.ip_address, target.ip_address)
+          : data.command;
       await copyToClipboard(command, "挂载命令");
-    } finally {
-      setCopyingId(undefined);
-    }
-  };
+    },
+  });
+  const actions: RowAction<FilesystemMountTarget>[] = [
+    {
+      key: "copy-mount-command",
+      label: "复制挂载命令",
+      disabled: (target) => target.status !== "available" || copyCommand.isPending,
+      loading: (target) => copyCommand.isPending && copyCommand.variables?.id === target.id,
+      onClick: (target) => copyCommand.mutateAsync(target),
+    },
+  ];
 
   useEffect(() => {
     onMountCountChange(items.length);
@@ -71,7 +73,7 @@ export function FilesystemMountTargets({
           header={{
             title: "挂载点",
             extra: (
-              <Button type="primary" onClick={() => setVisible(true)}>
+              <Button type="primary" onClick={onCreateMountTarget}>
                 创建挂载点
               </Button>
             ),
@@ -106,24 +108,10 @@ export function FilesystemMountTargets({
           data={items}
           loading={mounts.isLoading}
           pagination={false}
-          rowActions={[
-            {
-              key: "copy-mount-command",
-              label: "复制挂载命令",
-              disabled: (row) => row.status !== "available" || mountCommand.isFetching,
-              loading: (row) => copyingId === row.id,
-              onClick: copyMountCommand,
-            },
-          ]}
+          rowActions={actions}
           noDataElement={<Empty description="暂无挂载目标，请创建挂载目标后获取访问地址" />}
         />
       </div>
-      {visible && (
-        <CreateFilesystemMountTargetModal
-          filesystemId={filesystemId}
-          onCancel={() => setVisible(false)}
-        />
-      )}
     </>
   );
 }

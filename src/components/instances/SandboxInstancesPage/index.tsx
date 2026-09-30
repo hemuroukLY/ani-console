@@ -11,7 +11,7 @@ import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
 import { getImageDisplayName } from "@/lib/render";
 import { SandboxInstanceCreateModal } from "@/components/instances/SandboxInstanceCreateModal";
-import { useSandboxInstanceRowActions } from "./SandboxInstanceRowActions";
+import { useSandboxInstanceActions } from "@/hooks/useSandboxInstanceActions";
 
 type SandboxInstance = InstanceRecord;
 type SandboxStatus = "all" | FilterableInstanceState;
@@ -44,7 +44,7 @@ export function SandboxInstancesPage() {
         });
       },
     });
-  const { dialogNode, rowActions } = useSandboxInstanceRowActions(refresh);
+  const { dialogNode, actions } = useSandboxInstanceActions(refresh);
 
   useEffect(() => setPage(1), [searchField, searchText, setPage, status]);
 
@@ -167,7 +167,7 @@ export function SandboxInstancesPage() {
         <ListDataTable
           data={rows}
           columns={columns}
-          rowActions={rowActions}
+          rowActions={actions}
           loading={query.isFetching}
           emptyIconClassName="icon-Sandbox"
           emptyText="还没有沙箱实例，点击右上角创建"

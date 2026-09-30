@@ -1,9 +1,9 @@
-import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Modal, Select } from "@arco-design/web-react";
+import { useLoadBalancerActions } from "@/hooks/useLoadBalancerActions";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Select } from "@arco-design/web-react";
 import { useMemo, useState } from "react";
 import {
-  deleteNetworkLoadBalancer,
   listNetworkLoadBalancers,
   listNetworkVpcs,
   type NetworkLoadBalancer,
@@ -20,7 +20,6 @@ import {
 } from "@/components/common";
 import { useCursorPaginatedQuery } from "@/hooks/useCursorPaginatedQuery";
 import { formatDateTime } from "@/lib/format";
-import { navigateToResourceDetail } from "@/lib/resources";
 
 type LoadBalancer = NetworkLoadBalancer;
 type Vpc = NetworkVPC;
@@ -28,7 +27,6 @@ type StatusFilter = "all" | "pending" | "available" | "failed";
 type SearchField = "name" | "id";
 
 export function LoadBalancersPage() {
-  const navigate = useNavigate();
   const qc = useQueryClient();
   const [createVisible, setCreateVisible] = useState(false);
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -74,20 +72,9 @@ export function LoadBalancersPage() {
     queryKey: ["network-vpcs", "load-balancer-list"],
     queryFn: () => listNetworkVpcs({ limit: 100 }),
   });
-  const deleteLoadBalancer = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "load-balancer-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: (item: LoadBalancer) => deleteNetworkLoadBalancer(item.id),
-    onSuccess: () => {
-      resetPagination();
-      qc.invalidateQueries({ queryKey: ["network-load-balancers"] });
-    },
+  const { actions } = useLoadBalancerActions(() => {
+    resetPagination();
+    qc.invalidateQueries({ queryKey: ["network-load-balancers"] });
   });
   const items = useMemo(
     () => (loadBalancers.data?.items ?? []) as LoadBalancer[],
@@ -215,32 +202,7 @@ export function LoadBalancersPage() {
         <ListDataTable
           data={items}
           columns={columns}
-          rowActions={[
-            {
-              key: "listeners",
-              label: "配置监听",
-              onClick: (item) =>
-                navigateToResourceDetail(navigate, { type: "load-balancer", id: item.id }),
-            },
-            {
-              key: "backends",
-              label: "绑定后端",
-              onClick: (item) =>
-                navigateToResourceDetail(navigate, { type: "load-balancer", id: item.id }),
-            },
-            {
-              key: "delete",
-              label: "删除",
-              intent: "danger",
-              onClick: (item) =>
-                void Modal.confirm({
-                  title: "删除负载均衡",
-                  content: `确定删除「${item.name}」？`,
-                  okButtonProps: { status: "danger" },
-                  onOk: () => deleteLoadBalancer.mutateAsync(item),
-                }),
-            },
-          ]}
+          rowActions={actions}
           loading={loadBalancers.isFetching || vpcs.isFetching}
           emptyIconClassName="icon-fuzaijunhengqi"
           emptyText={

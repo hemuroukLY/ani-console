@@ -1,3 +1,6 @@
+import { useVpcActions } from "@/hooks/useVpcActions";
+import { ResourceActionMenu } from "@/components/common/ResourceActionMenu";
+
 import { withId } from "@/lib/id";
 import {
   DetailPageFrame,
@@ -7,10 +10,9 @@ import {
   StatusBadge,
 } from "@/components/common";
 import { useBackOrFallback } from "@/hooks/useBackOrFallback";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Dropdown, Menu, Modal } from "@arco-design/web-react";
-import { IconMoreVertical } from "@arco-design/web-react/icon";
-import { deleteNetworkVpc, getNetworkVpc, type NetworkVPC } from "@/api/network";
+import { useQuery } from "@tanstack/react-query";
+
+import { getNetworkVpc, type NetworkVPC } from "@/api/network";
 
 import { formatDateTime } from "@/lib/format";
 import { navigationBreadcrumbsForPath } from "@/components/layouts/AppLayout/navigation";
@@ -33,43 +35,11 @@ export function VpcDetailPage({ vpcId }: { vpcId: string }) {
     queryKey: ["network-vpc", vpcId],
     queryFn: () => getNetworkVpc(vpcId),
   });
-  const deleteVpc = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "vpc-delete",
-        action: "删除",
-        errorFallback: "请求失败",
-      },
-    },
-    mutationFn: () => deleteNetworkVpc(vpcId),
-    onSuccess: goBack,
-  });
+  const { actions } = useVpcActions(goBack);
 
   if (!detail.data) return <DetailPagePlaceholder loading={detail.isLoading} />;
 
   const vpc = detail.data as Vpc;
-  const moreMenu = (
-    <Menu
-      onClickMenuItem={(key) => {
-        if (key !== "delete") return;
-        Modal.confirm({
-          title: "删除 VPC",
-          content: `确定删除「${vpc.name}」？存在子网或关联资源时无法删除，请先清理相关资源。`,
-          okButtonProps: { status: "danger" },
-          onOk: () => deleteVpc.mutateAsync(undefined),
-        });
-      }}
-    >
-      <Menu.Item
-        key="delete"
-        disabled={deleteVpc.isPending}
-        style={{ color: "var(--color-danger-6)" }}
-      >
-        删除
-      </Menu.Item>
-    </Menu>
-  );
 
   return (
     <DetailPageFrame
@@ -78,13 +48,7 @@ export function VpcDetailPage({ vpcId }: { vpcId: string }) {
       status={<StatusBadge status={vpc.state} />}
       icon={<AliIcon name="VPCwangluo" size={28} />}
       headerItems={[{ label: "CIDR", value: vpc.cidr }]}
-      actions={
-        <Dropdown trigger="click" position="br" droplist={moreMenu}>
-          <Button disabled={deleteVpc.isPending} aria-label="更多操作" title="更多操作">
-            <IconMoreVertical />
-          </Button>
-        </Dropdown>
-      }
+      actions={<ResourceActionMenu record={vpc} actions={actions} />}
       cards={[
         {
           key: "basic",

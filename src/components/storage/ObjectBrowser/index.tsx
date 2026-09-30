@@ -1,3 +1,4 @@
+import type { RowAction } from "@/components/common";
 import {
   Breadcrumb,
   Button,
@@ -25,14 +26,10 @@ type ObjectBrowserProps = {
   entries: BucketEntry[];
   aclLabel: string;
   loading?: boolean;
-  actionLoading?: boolean;
+  actions: RowAction<BucketEntry>[];
   primaryAction?: ReactNode;
   onNavigate: (prefix: string) => void;
   onCreateFolder: () => void;
-  onCopyPath: (entry: BucketEntry) => void;
-  onDownload: (entry: BucketEntry) => void;
-  onCopyLink: (entry: BucketEntry) => void;
-  onDelete: (entry: BucketEntry) => void;
 };
 
 function prefixSegments(prefix: string): string[] {
@@ -51,14 +48,10 @@ export function ObjectBrowser({
   entries,
   aclLabel,
   loading,
-  actionLoading,
+  actions,
   primaryAction,
   onNavigate,
   onCreateFolder,
-  onCopyPath,
-  onDownload,
-  onCopyLink,
-  onDelete,
 }: ObjectBrowserProps) {
   const segments = prefixSegments(prefix);
   const canGoUp = prefix !== "/";
@@ -166,35 +159,11 @@ export function ObjectBrowser({
         loading={loading}
         pagination={false}
         scroll={{ x: "max-content" }}
-        rowActions={[
-          {
-            key: "copy-path",
-            label: "复制路径",
-            visible: (entry) => !entry.parentTarget && entry.kind === "object",
-            onClick: onCopyPath,
-          },
-          {
-            key: "download",
-            label: "下载",
-            visible: (entry) => !entry.parentTarget && entry.kind === "object",
-            disabled: () => Boolean(actionLoading),
-            onClick: onDownload,
-          },
-          {
-            key: "copy-link",
-            label: "临时链接",
-            visible: (entry) => !entry.parentTarget && entry.kind === "object",
-            disabled: () => Boolean(actionLoading),
-            onClick: onCopyLink,
-          },
-          {
-            key: "delete",
-            label: "删除",
-            intent: "danger",
-            visible: (entry) => !entry.parentTarget,
-            onClick: onDelete,
-          },
-        ]}
+        rowActions={actions.map((action) => ({
+          ...action,
+          visible: (entry: BrowserEntry) =>
+            !entry.parentTarget && action.visible?.(entry) !== false,
+        }))}
         noDataElement={<Empty description="当前文件夹暂无对象，可上传对象或新建文件夹" />}
       />
     </div>

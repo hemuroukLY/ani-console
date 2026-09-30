@@ -1,164 +1,25 @@
 import type { InstanceRecord } from "@/api/instances";
-import { applyInstanceLifecycle } from "@/api/instances";
-import type { StorageFilesystem } from "@/api/storage/filesystems";
-import { listFilesystemMountTargets, listFilesystems } from "@/api/storage/filesystems";
-import type { StorageVolume } from "@/api/storage/volumes";
-import { listVolumes } from "@/api/storage/volumes";
-import { DataTable, StatusBadge } from "@/components/common";
-import { withId } from "@/lib/id";
-import { Button, Checkbox, Empty, Form, Input, Modal, Select, Space } from "@arco-design/web-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
-import { validateForm } from "@/lib/form";
+import { DataTable, StatusBadge, type RowAction } from "@/components/common";
+
+import { Button, Empty, Space } from "@arco-design/web-react";
 
 type Instance = InstanceRecord;
 type Volume = NonNullable<Instance["volumes"]>[number];
 type FilesystemAttachment = NonNullable<Instance["storage_attachments"]>[number];
-type MountKind = "volume" | "filesystem";
-
-const MOUNT_BUSY_STATES = new Set<Instance["state"]>([
-  "pending",
-  "provisioning",
-  "starting",
-  "stopping",
-  "deleting",
-]);
-
-function isMountDisabled(instance: Instance) {
-  if (instance.kind === "vm") {
-    return instance.state !== "running" && instance.state !== "stopped";
-  }
-  return MOUNT_BUSY_STATES.has(instance.state);
-}
-
-type MountFormValues = {
-  resourceId?: string;
-  mountPath?: string;
-  readOnly?: boolean;
-};
-
 export function InstanceStorage({
   instance,
-  onChanged,
+  mountVolume,
+  mountFilesystem,
 }: {
   instance: Instance;
-  onChanged: () => void;
+  mountVolume?: RowAction<Instance>;
+  mountFilesystem?: RowAction<Instance>;
 }) {
-  const [form] = Form.useForm<MountFormValues>();
-  const [mountKind, setMountKind] = useState<MountKind>();
-  const [selectedResourceId, setSelectedResourceId] = useState("");
-  const volumeMode = instance.kind === "vm" ? "block" : "filesystem";
-  const mountDisabled = isMountDisabled(instance);
   const volumes = instance.volumes ?? [];
   const filesystems = (instance.storage_attachments ?? []).filter(
     (attachment) => attachment.resource_type === "filesystem",
   );
-  const attachedFilesystemIds = new Set(filesystems.map((filesystem) => filesystem.resource_id));
-  const volumeOptions = useQuery({
-    meta: {
-      errorNotification: {
-        id: "volumes",
-        action: "云盘列表加载",
-        fallback: "请求失败，请稍后重试",
-      },
-    },
-    queryKey: ["volumes", "instance-mount", instance.id, volumeMode],
-    queryFn: () =>
-      listVolumes({
-        limit: 100,
-        state: "pending,available",
-        volume_mode: volumeMode,
-        available_for_instance_id: instance.id,
-      }),
-    enabled: mountKind === "volume",
-  });
-  const filesystemOptions = useQuery({
-    meta: {
-      errorNotification: {
-        id: "filesystems",
-        action: "文件存储列表加载",
-        fallback: "请求失败，请稍后重试",
-      },
-    },
-    queryKey: ["filesystems", "instance-mount", instance.id],
-    queryFn: () =>
-      listFilesystems({
-        limit: 100,
-        protocol: "nfs",
-        available_for_instance_id: instance.id,
-      }),
-    enabled: mountKind === "filesystem",
-  });
-  const mountTargets = useQuery({
-    meta: {
-      errorNotification: {
-        id: withId("filesystem-mounts", selectedResourceId),
-        action: "NFS 挂载目标检查",
-        fallback: "请求失败，请稍后重试",
-      },
-    },
-    queryKey: ["filesystem-mount-targets", selectedResourceId],
-    queryFn: async () =>
-      (await listFilesystemMountTargets(selectedResourceId, { limit: 100 })).items,
-    enabled: mountKind === "filesystem" && Boolean(selectedResourceId),
-  });
-  const availableVolumes = (volumeOptions.data?.items ?? []) as StorageVolume[];
-  // TODO: 文件存储接口确认按状态和 available_for_instance_id 过滤后，移除此处本地兜底过滤。
-  const availableFilesystems = (
-    (filesystemOptions.data?.items ?? []) as StorageFilesystem[]
-  ).filter(
-    (filesystem) =>
-      filesystem.protocol === "nfs" &&
-      filesystem.state === "available" &&
-      !attachedFilesystemIds.has(filesystem.id),
-  );
-  const hasAvailableMountTarget = Boolean(
-    mountTargets.data?.some((target) => target.status === "available"),
-  );
-
-  useEffect(() => {
-    if (!mountKind) return;
-    form.resetFields();
-    form.setFieldsValue({ readOnly: false });
-    setSelectedResourceId("");
-  }, [form, mountKind]);
-
-  const mount = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "instance-storage-mount",
-        action: "操作",
-        errorFallback: "操作失败，请稍后重试",
-      },
-    },
-    mutationFn: async (values: MountFormValues) => {
-      const resourceId = values.resourceId?.trim();
-      const mountPath = values.mountPath?.trim();
-      if (!mountKind || !resourceId || !mountPath) return;
-      if (mountKind === "volume" && !availableVolumes.some((volume) => volume.id === resourceId)) {
-        throw new Error("请选择与实例类型匹配的可挂载云盘；卷用途不可修改，需按目标用途重新创建");
-      }
-      if (mountKind === "filesystem" && !hasAvailableMountTarget) {
-        throw new Error("当前 NFS 没有可用挂载目标");
-      }
-      const submitData = {
-        action: mountKind === "volume" ? "attach_volume" : "attach_filesystem",
-        mount_path: mountPath,
-        read_only: values.readOnly ?? false,
-        ...(mountKind === "volume" ? { volume_id: resourceId } : { filesystem_id: resourceId }),
-      } as const;
-      await applyInstanceLifecycle(instance.id, submitData);
-    },
-    onSuccess: () => {
-      setMountKind(undefined);
-      setSelectedResourceId("");
-      form.resetFields();
-      onChanged();
-    },
-  });
-
   return (
     <>
       <Space direction="vertical" size={24} className="w-full">
@@ -167,7 +28,10 @@ export function InstanceStorage({
             header={{
               title: "挂载点",
               extra: (
-                <Button disabled={mountDisabled} onClick={() => setMountKind("volume")}>
+                <Button
+                  disabled={!mountVolume || mountVolume.disabled?.(instance)}
+                  onClick={() => mountVolume?.onClick(instance)}
+                >
                   挂载云盘
                 </Button>
               ),
@@ -200,7 +64,10 @@ export function InstanceStorage({
             header={{
               title: "文件存储 NFS",
               extra: (
-                <Button disabled={mountDisabled} onClick={() => setMountKind("filesystem")}>
+                <Button
+                  disabled={!mountFilesystem || mountFilesystem.disabled?.(instance)}
+                  onClick={() => mountFilesystem?.onClick(instance)}
+                >
                   挂载 NFS
                 </Button>
               ),
@@ -235,75 +102,6 @@ export function InstanceStorage({
           />
         </section>
       </Space>
-
-      <Modal
-        title={mountKind === "volume" ? "挂载云盘" : "挂载 NFS"}
-        visible={Boolean(mountKind)}
-        confirmLoading={mount.isPending}
-        okButtonProps={{
-          disabled:
-            !selectedResourceId ||
-            (mountKind === "filesystem" && (mountTargets.isLoading || !hasAvailableMountTarget)),
-        }}
-        onCancel={() => {
-          setMountKind(undefined);
-          setSelectedResourceId("");
-          form.resetFields();
-        }}
-        onOk={async () => mount.mutate(await validateForm(form))}
-        unmountOnExit
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            field="resourceId"
-            label={mountKind === "volume" ? "云盘" : "文件存储 NFS"}
-            extra={
-              mountKind === "volume"
-                ? instance.kind === "vm"
-                  ? "仅可选择 VM 数据盘，卷用途创建后不可修改。"
-                  : "仅可选择容器目录卷，卷用途创建后不可修改。"
-                : undefined
-            }
-            rules={[{ required: true, message: "请选择资源" }]}
-          >
-            <Select
-              loading={
-                mountKind === "volume" ? volumeOptions.isLoading : filesystemOptions.isLoading
-              }
-              placeholder={mountKind === "volume" ? "请选择可挂载云盘" : "请选择可用 NFS"}
-              showSearch
-              allowClear
-              onChange={(value) => setSelectedResourceId(value ?? "")}
-              onClear={() => setSelectedResourceId("")}
-              filterOption={(inputValue, option) =>
-                String(option.props.children).toLowerCase().includes(inputValue.toLowerCase())
-              }
-            >
-              {mountKind === "volume"
-                ? availableVolumes.map((volume) => (
-                    <Select.Option key={volume.id} value={volume.id}>
-                      {volume.name} · {volume.size_gib} GiB · {volume.storage_class}
-                    </Select.Option>
-                  ))
-                : availableFilesystems.map((filesystem) => (
-                    <Select.Option key={filesystem.id} value={filesystem.id}>
-                      {filesystem.name} · NFS · {filesystem.size_gib} GiB
-                    </Select.Option>
-                  ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            field="mountPath"
-            label="挂载路径"
-            rules={[{ required: true, message: "请输入挂载路径" }]}
-          >
-            <Input placeholder="例如 /data" />
-          </Form.Item>
-          <Form.Item field="readOnly" triggerPropName="checked">
-            <Checkbox>只读挂载</Checkbox>
-          </Form.Item>
-        </Form>
-      </Modal>
     </>
   );
 }

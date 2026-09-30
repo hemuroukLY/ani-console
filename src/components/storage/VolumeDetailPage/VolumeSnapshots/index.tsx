@@ -1,14 +1,18 @@
 import { listVolumeSnapshots, type VolumeSnapshotRecord } from "@/api/storage/volumes";
 import { DataTable, StatusBadge } from "@/components/common";
-import { CreateVolumeSnapshotModal } from "@/components/storage/CreateVolumeSnapshotModal";
+
 import { formatBytes, formatDateTime } from "@/lib/format";
 import { withId } from "@/lib/id";
 import { Button, Empty } from "@arco-design/web-react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 
-export function VolumeSnapshots({ volumeId }: { volumeId: string }) {
-  const [visible, setVisible] = useState(false);
+export function VolumeSnapshots({
+  volumeId,
+  onCreateSnapshot,
+}: {
+  volumeId: string;
+  onCreateSnapshot: () => void;
+}) {
   const snapshots = useQuery({
     meta: {
       errorNotification: {
@@ -28,7 +32,7 @@ export function VolumeSnapshots({ volumeId }: { volumeId: string }) {
         <DataTable<VolumeSnapshotRecord>
           header={{
             title: "快照",
-            extra: <Button onClick={() => setVisible(true)}>创建快照</Button>,
+            extra: <Button onClick={onCreateSnapshot}>创建快照</Button>,
           }}
           columns={[
             { title: "名称", dataIndex: "name" },
@@ -46,9 +50,6 @@ export function VolumeSnapshots({ volumeId }: { volumeId: string }) {
           noDataElement={<Empty description="暂无快照，点击右上角「创建快照」开始" />}
         />
       </div>
-      {visible && (
-        <CreateVolumeSnapshotModal volumeId={volumeId} onCancel={() => setVisible(false)} />
-      )}
     </>
   );
 }

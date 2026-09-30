@@ -1,42 +1,20 @@
+import { useBucketUpload } from "@/hooks/useBucketUpload";
 import type { StorageBucketRecord } from "@/api/storage/buckets";
-import { uploadStorageObjectFile } from "@/api/storage/objects";
+
 import { Button, Modal, Space, Typography, Upload } from "@arco-design/web-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type BucketUploadModalProps = {
-  bucket?: StorageBucketRecord;
+  bucket: StorageBucketRecord;
   onCancel: () => void;
 };
 
 export function BucketUploadModal({ bucket, onCancel }: BucketUploadModalProps) {
-  const queryClient = useQueryClient();
-  const upload = useMutation({
-    meta: {
-      feedback: {
-        channel: "notification",
-        id: "object-upload",
-        action: "上传",
-        errorFallback: "上传失败",
-      },
-    },
-    mutationFn: (file: File) => {
-      if (!bucket) throw new Error("存储桶不存在");
-      return uploadStorageObjectFile({ bucketId: bucket.id, file, prefix: "/" });
-    },
-    onSuccess: () => {
-      if (bucket) {
-        void queryClient.invalidateQueries({ queryKey: ["bucket", bucket.id] });
-        void queryClient.invalidateQueries({ queryKey: ["bucket-objects", bucket.id] });
-      }
-      void queryClient.invalidateQueries({ queryKey: ["buckets"] });
-      onCancel();
-    },
-  });
+  const upload = useBucketUpload(bucket.id, "/", onCancel);
 
   return (
     <Modal
-      visible={Boolean(bucket)}
-      title={bucket ? `上传对象 · ${bucket.name}` : "上传对象"}
+      visible
+      title={`上传对象 · ${bucket.name}`}
       footer={null}
       onCancel={onCancel}
       unmountOnExit
